@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Him - AI 뷰티 가이드 프로토타입</title>
+<style>
+  :root{
+    --bg:#f7f6f3;
+    --card:#ffffff;
+    --ink:#1c1c1c;
+    --sub:#8a8580;
+    --line:#e6e1d8;
+    --accent:#6b2b2b;
+    --accent-soft:#f3e9e8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  h1,h2,h3{
+    font-family:Georgia,"Noto Serif KR","Nanum Myeongjo",serif;
+    font-weight:400;
+    margin:0;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 40px;}
+
+  /* ---------- header ---------- */
+  .site-header{
+    border-bottom:1px solid var(--line);
+    background:var(--card);
+  }
+  .site-header .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 40px;
+  }
+  .brand{font-size:20px;letter-spacing:3px;}
+  .brand-sub{font-size:11px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:52px 0 28px;}
+  .hero h1{font-size:34px;line-height:1.45;margin-bottom:14px;}
+  .hero p{font-size:14px;color:var(--sub);margin:0 0 26px;}
+  .search-box{
+    max-width:440px;
+    display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid var(--ink);
+    padding:12px 2px;
+  }
+  .search-box input{
+    border:none;outline:none;background:transparent;
+    font-size:14px;width:100%;color:var(--ink);font-family:inherit;
+  }
+  .search-box input::placeholder{color:var(--sub);}
+
+  /* ---------- layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:1fr 380px;
+    gap:48px;
+    align-items:start;
+    padding-bottom:80px;
+  }
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr;}
+    .right-panel{position:static !important;}
+  }
+
+  /* filters */
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .chip{
+    padding:7px 14px;border-radius:3px;
+    background:transparent;border:1px solid var(--line);
+    font-size:12.5px;color:var(--sub);cursor:pointer;
+    transition:all .15s;user-select:none;
+  }
+  .chip.active{background:var(--ink);color:var(--card);border-color:var(--ink);}
+
+  .section-label{
+    font-size:11px;font-weight:600;color:var(--sub);
+    letter-spacing:1px;text-transform:uppercase;
+    margin:28px 0 16px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+
+  /* product grid */
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:18px;
+  }
+  .product-card{
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    cursor:pointer;
+    background:var(--card);
+    transition:border-color .15s, transform .15s;
+  }
+  .product-card:hover{transform:translateY(-2px);}
+  .product-card.selected{border-color:var(--accent);}
+  .thumb-box{
+    aspect-ratio:1/1;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    color:var(--ink);
+  }
+  .product-card.selected .thumb-box{background:var(--accent-soft);}
+  .thumb-box svg{width:38px;height:38px;stroke-width:1.2;}
+  .p-body{padding:14px 14px 16px;}
+  .p-name{font-size:14px;font-weight:600;margin:0 0 4px;}
+  .p-meta{font-size:11.5px;color:var(--sub);margin:0 0 10px;}
+  .p-price{font-size:13px;font-weight:700;color:var(--ink);}
+
+  /* ---------- right panel ---------- */
+  .right-panel{
+    position:sticky;top:28px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--card);
+    min-height:520px;
+    display:flex;flex-direction:column;
+  }
+  .chart-empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;padding:60px 30px;text-align:center;
+  }
+  .chart-empty svg{width:34px;height:34px;stroke:var(--sub);stroke-width:1;opacity:.7;}
+  .chart-empty p{font-size:13px;color:var(--sub);margin:0;line-height:1.6;}
+
+  .chart-content{display:none;flex-direction:column;flex:1;}
+  .chart-content.active{display:flex;}
+
+  .chart-topbar{
+    padding:20px 22px 16px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .chart-title-wrap{display:flex;align-items:center;gap:10px;min-width:0;}
+  .back-btn{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg);border:1px solid var(--line);
+    cursor:pointer;font-size:14px;color:var(--ink);
+  }
+  .back-btn:hover{border-color:var(--ink);}
+  .chart-title{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .toggle-wrap{display:flex;align-items:center;gap:7px;}
+  .toggle-label{font-size:11px;color:var(--sub);}
+  .switch{
+    width:36px;height:20px;border-radius:999px;
+    background:var(--line);position:relative;cursor:pointer;
+    transition:background .2s;flex-shrink:0;
+  }
+  .switch.on{background:var(--accent);}
+  .switch::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:16px;height:16px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;
+  }
+  .switch.on::after{left:18px;}
+
+  .face-stage{
+    position:relative;
+    height:320px;
+    background:radial-gradient(circle at 50% 34%, #16243c 0%, #060911 82%);
+    overflow:hidden;
+  }
+  .face-stage canvas{
+    width:100% !important;height:100% !important;
+    display:block;touch-action:none;cursor:grab;
+  }
+  .face-stage canvas:active{cursor:grabbing;}
+  .face3d-fallback{
+    position:absolute;inset:0;display:none;
+    align-items:center;justify-content:center;
+    text-align:center;padding:30px;font-size:12.5px;color:#9fb3c8;
+  }
+  #marker-layer{position:absolute;inset:0;pointer-events:none;z-index:2;}
+  .marker{
+    position:absolute;width:16px;height:16px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:#4fd6ff;
+    border:2px solid #eaf7ff;
+    box-shadow:0 0 0 0 rgba(79,214,255,.55);
+    animation:pulse 2s infinite;
+    cursor:pointer;z-index:2;
+    pointer-events:auto;
+  }
+  .marker.selected{background:#eaf7ff;}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(79,214,255,.5);}
+    70%{box-shadow:0 0 0 12px rgba(79,214,255,0);}
+    100%{box-shadow:0 0 0 0 rgba(79,214,255,0);}
+  }
+  .tooltip{
+    position:absolute;max-width:200px;
+    background:var(--ink);color:#fff;
+    padding:11px 13px;border-radius:8px;
+    font-size:12.5px;line-height:1.55;
+    box-shadow:0 10px 24px rgba(28,28,28,.25);
+    z-index:3;display:none;
+    transform:translate(-50%,-120%);
+  }
+  .tooltip b{display:block;font-size:12px;color:var(--accent-soft);margin-bottom:4px;font-weight:700;}
+  .tooltip::after{
+    content:'';position:absolute;bottom:-5px;left:50%;
+    transform:translateX(-50%) rotate(45deg);
+    width:9px;height:9px;background:var(--ink);
+  }
+  .tooltip.show{display:block;}
+
+  .video-mock{
+    margin:22px;border-radius:8px;overflow:hidden;
+    background:linear-gradient(160deg,#2a2724,#0f0e0d);
+    aspect-ratio:16/11;position:relative;
+    display:flex;align-items:center;justify-content:center;flex:1;
+  }
+  .play-btn{
+    width:50px;height:50px;border-radius:50%;
+    background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.75);
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:#fff;cursor:pointer;
+  }
+  .video-duration{position:absolute;bottom:12px;right:14px;color:#fff;font-size:11px;opacity:.85;}
+  .video-caption{
+    position:absolute;top:14px;left:16px;right:16px;
+    color:#fff;font-size:12.5px;opacity:.85;
+  }
+
+  .hint{text-align:center;font-size:11.5px;color:var(--sub);padding:12px 20px 0;}
+
+  .steps-wrap{padding:18px 22px 24px;}
+  .steps-wrap h3{
+    font-family:"Pretendard",sans-serif;
+    font-size:11px;color:var(--sub);margin:0 0 14px;font-weight:600;
+    letter-spacing:1px;text-transform:uppercase;
+  }
+  .step-v{display:flex;gap:12px;position:relative;padding-bottom:18px;}
+  .step-v:not(:last-child)::before{
+    content:'';position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--line);
+  }
+  .step-num{
+    width:23px;height:23px;border-radius:50%;flex-shrink:0;
+    background:var(--card);color:var(--ink);border:1px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;
+  }
+  .step-v p{font-size:13px;line-height:1.6;margin:2px 0 0;color:var(--ink);}
+</style>
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <span class="brand">FOR HIM</span>
+    <span class="brand-sub">AI Beauty Guide</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>내 피부에 맞는<br>딱 필요한 만큼만 알려드려요</h1>
+    <p>가지고 있는 제품을 등록하면 바로 사용법을 안내해드려요</p>
+    <div class="search-box">
+      <input type="text" placeholder="내가 사용하는 제품 / 브랜드명 검색" oninput="filterProducts(this.value)">
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- ===== 왼쪽 : 필터 + 제품 그리드 ===== -->
+    <section class="left-panel">
+      <div class="chip-row" id="category-chips"></div>
+      <div class="chip-row" id="price-chips"></div>
+
+      <div class="section-label">등록된 제품 · 카드를 선택하면 오른쪽에서 사용법을 볼 수 있어요</div>
+      <div class="product-grid" id="product-list"></div>
+    </section>
+
+    <!-- ===== 오른쪽 : 페이스 차트 (고정) ===== -->
+    <aside class="right-panel" id="right-panel">
+      <div class="chart-empty" id="chart-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+        <p>왼쪽에서 제품을 선택하면<br>이곳에 사용법 가이드가 나타나요</p>
+      </div>
+
+      <div class="chart-content" id="chart-content">
+        <div class="chart-topbar">
+          <div class="chart-title-wrap">
+            <button class="back-btn" onclick="history.back()" title="뒤로가기">←</button>
+            <p class="chart-title" id="chart-product-name">제품명</p>
+          </div>
+          <div class="toggle-wrap">
+            <span class="toggle-label">영상으로 보기</span>
+            <div class="switch" id="video-toggle" onclick="toggleVideo()"></div>
+          </div>
+        </div>
+
+        <div class="face-stage" id="face-stage">
+          <div class="face3d-fallback" id="face3d-fallback">3D 뷰어를 불러오지 못했어요.<br>인터넷 연결을 확인해주세요.</div>
+          <div id="marker-layer"></div>
+          <div class="tooltip" id="tooltip"></div>
+        </div>
+
+        <div class="video-mock" id="video-mock" style="display:none;">
+          <p class="video-caption" id="video-caption">사용법 영상</p>
+          <div class="play-btn">▶</div>
+          <span class="video-duration">0:42</span>
+        </div>
+
+        <p class="hint" id="chart-hint">얼굴을 드래그해서 돌려보고, 표시된 포인트를 눌러 사용법을 확인하세요</p>
+
+        <div class="steps-wrap">
+          <h3>사용 순서</h3>
+          <div id="steps-list"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ---------------- 더미 데이터 ---------------- */
+const CATEGORIES = ["전체","스킨케어","베이스","색조"];
+const PRICE_RANGES = ["전체","1만원대","2만원대","3만원대+"];
+
+const ICONS = {
+  "스킨케어": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2c2.5 3 5 6.5 5 10a5 5 0 1 1-10 0c0-3.5 2.5-7 5-10Z"/></svg>',
+  "베이스": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/></svg>',
+  "색조": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 3h6l1 6h-8l1-6Z"/><path d="M9 9h6l-.7 10.2a1.5 1.5 0 0 1-1.5 1.3h-1.6a1.5 1.5 0 0 1-1.5-1.3L9 9Z"/></svg>'
+};
+
+/* 마커 좌표는 구면 좌표계(theta: 정수리 0°→턱 180°, phi: 정면 0°→좌우 ±90°)로 정의해서
+   3D 얼굴 모델 표면에 그대로 얹는다 */
+const PRODUCTS = [
+  {
+    id:1, name:"수분 선크림", brand:"이니스프리",
+    category:"스킨케어", price:18000, priceTag:"1만원대",
+    markers:[
+      {theta:52, phi:0,   label:"이마 T존", desc:"이마 T존에 동전 크기만큼 덜어 골고루 펴발라요"},
+      {theta:88, phi:-32, label:"왼쪽 볼", desc:"양볼에 콩알만큼 덧발라 자외선을 꼼꼼히 막아요"},
+      {theta:88, phi:32,  label:"오른쪽 볼", desc:"양볼에 콩알만큼 덧발라 자외선을 꼼꼼히 막아요"}
+    ],
+    steps:["세안 후 스킨/로션으로 피부결 정돈","손바닥에 500원 동전 크기만큼 덜기","이마→볼→턱 순서로 안에서 바깥으로 펴바르기"]
+  },
+  {
+    id:2, name:"톤업 선크림", brand:"라운드어라운드",
+    category:"베이스", price:22000, priceTag:"2만원대",
+    markers:[
+      {theta:52, phi:0,   label:"이마", desc:"이마에 소량 두드려 발라 톤을 정리해요"},
+      {theta:76, phi:-20, label:"눈 밑", desc:"다크서클 부위는 손끝으로 가볍게 두드려 발라요"},
+      {theta:76, phi:20,  label:"눈 밑", desc:"다크서클 부위는 손끝으로 가볍게 두드려 발라요"},
+      {theta:96, phi:0,   label:"볼 중앙", desc:"홍조가 있는 부위는 콩알만큼 톡톡 두드려 커버해요"}
+    ],
+    steps:["세안 후 기초 화장 마무리","손등에 콩알 크기만큼 덜어 온기 주기","T존→볼→눈밑 순으로 톡톡 두드려 흡수"]
+  },
+  {
+    id:3, name:"글로우 틴트", brand:"롬앤",
+    category:"색조", price:15000, priceTag:"1만원대",
+    markers:[
+      {theta:112, phi:0, label:"입술 중앙", desc:"입술 중앙에 콕 찍고 입술 라인 안쪽으로만 펴발라요"}
+    ],
+    steps:["입술 각질 정리","입술 중앙에 톡 찍기","입술을 안으로 말아 자연스럽게 펴바르기"]
+  },
+  {
+    id:4, name:"컨실러 스틱", brand:"클리오",
+    category:"베이스", price:14000, priceTag:"1만원대",
+    markers:[
+      {theta:76, phi:-20, label:"왼쪽 다크서클", desc:"다크서클 부위에 점을 찍듯 얹고 손끝으로 톡톡 펴발라요"},
+      {theta:76, phi:20,  label:"오른쪽 다크서클", desc:"다크서클 부위에 점을 찍듯 얹고 손끝으로 톡톡 펴발라요"}
+    ],
+    steps:["베이스 제품 먼저 마무리","다크서클 위에 얇게 점 찍기","약지로 두드리듯 경계 없이 펴바르기"]
+  }
+];
+
+let currentFiltered = [...PRODUCTS];
+let activeCategory = "전체";
+let activePrice = "전체";
+let currentProduct = null;
+
+/* ---------------- 필터 렌더 ---------------- */
+function renderChips(containerId, items, activeValue, onClick){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = items.map(item =>
+    `<div class="chip ${item===activeValue?'active':''}" onclick="${onClick}('${item}')">${item}</div>`
+  ).join('');
+}
+
+function selectCategory(val){ activeCategory = val; applyFilters(); }
+function selectPrice(val){ activePrice = val; applyFilters(); }
+
+function applyFilters(keyword=""){
+  currentFiltered = PRODUCTS.filter(p=>{
+    const matchCat = activeCategory==="전체" || p.category===activeCategory;
+    const matchPrice = activePrice==="전체" || p.priceTag===activePrice;
+    const matchKeyword = !keyword || p.name.includes(keyword) || p.brand.includes(keyword);
+    return matchCat && matchPrice && matchKeyword;
+  });
+  renderChips('category-chips', CATEGORIES, activeCategory, 'selectCategory');
+  renderChips('price-chips', PRICE_RANGES, activePrice, 'selectPrice');
+  renderProductGrid();
+}
+
+function filterProducts(keyword){ applyFilters(keyword); }
+
+function renderProductGrid(){
+  const wrap = document.getElementById('product-list');
+  if(currentFiltered.length===0){
+    wrap.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--sub);font-size:13px;padding:30px 0;">조건에 맞는 제품이 없어요</p>`;
+    return;
+  }
+  wrap.innerHTML = currentFiltered.map(p => `
+    <div class="product-card ${currentProduct && currentProduct.id===p.id ? 'selected':''}" onclick="selectProduct(${p.id})">
+      <div class="thumb-box">${ICONS[p.category]}</div>
+      <div class="p-body">
+        <p class="p-name">${p.name}</p>
+        <p class="p-meta">${p.brand} · ${p.category}</p>
+        <p class="p-price">${p.price.toLocaleString()}원</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- 제품 선택 → 오른쪽 패널 ---------------- */
+/* 선택/해제 시 스크롤 위치를 기억했다가 즉시 복원해서, 목록이 길어도
+   뒤로가기로 돌아왔을 때 보던 지점 그대로 유지되게 한다 */
+function selectProduct(productId, pushHistory = true){
+  const keepScroll = window.scrollY;
+
+  currentProduct = PRODUCTS.find(p=>p.id===productId);
+  renderProductGrid();
+
+  document.getElementById('chart-empty').style.display = 'none';
+  document.getElementById('chart-content').classList.add('active');
+
+  document.getElementById('chart-product-name').textContent = currentProduct.name;
+  document.getElementById('video-caption').textContent = currentProduct.name + " 사용법 영상";
+
+  document.getElementById('video-toggle').classList.remove('on');
+  document.getElementById('face-stage').style.display = 'block';
+  document.getElementById('video-mock').style.display = 'none';
+  document.getElementById('chart-hint').style.display = 'block';
+
+  if(!face3dReady){ Face3D.init(); face3dReady = true; }
+  renderMarkers();
+  renderSteps();
+  hideTooltip();
+
+  if(pushHistory){
+    history.pushState({ productId, scrollY: keepScroll }, '', '#p' + productId);
+  }
+  window.scrollTo(0, keepScroll);
+}
+
+function deselectProduct(pushHistory = true){
+  const keepScroll = window.scrollY;
+
+  currentProduct = null;
+  renderProductGrid();
+  document.getElementById('chart-empty').style.display = 'flex';
+  document.getElementById('chart-content').classList.remove('active');
+
+  if(pushHistory){
+    history.pushState({ productId: null, scrollY: keepScroll }, '', location.pathname + location.search);
+  }
+  window.scrollTo(0, keepScroll);
+}
+
+window.addEventListener('popstate', (e)=>{
+  const state = e.state;
+  if(state && state.productId){
+    selectProduct(state.productId, false);
+  } else {
+    deselectProduct(false);
+  }
+  if(state && typeof state.scrollY === 'number'){
+    window.scrollTo(0, state.scrollY);
+  }
+});
+
+/* ---------------- 3D 얼굴 모델 ---------------- */
+let face3dReady = false;
+
+const Face3D = (function(){
+  let scene, camera, renderer, controls, container;
+  let markerData = [];
+
+  function init(){
+    container = document.getElementById('face-stage');
+    if(typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined'){
+      document.getElementById('face3d-fallback').style.display = 'flex';
+      return;
+    }
+    const w = container.clientWidth, h = container.clientHeight;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
+    camera.position.set(0, 0.1, 5.3);
+
+    renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h);
+    container.insertBefore(renderer.domElement, container.firstChild);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xe3d6c4, 0.95));
+    const key = new THREE.DirectionalLight(0xffffff, 0.75);
+    key.position.set(2.5, 3, 3);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xd8c4a8, 0.4);
+    rim.position.set(-3, 1.2, -2.5);
+    scene.add(rim);
+
+    scene.add(buildHead());
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.1, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    controls.minPolarAngle = Math.PI * 0.32;
+    controls.maxPolarAngle = Math.PI * 0.68;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.4;
+    controls.addEventListener('start', ()=>{ controls.autoRotate = false; hideTooltip(); });
+    controls.update();
+
+    window.addEventListener('resize', onResize);
+
+    animate();
+  }
+
+  function buildHead(){
+    // 스캔 홀로그램 느낌의 저해상도 그물망(net) 와이어프레임 — 매끈한 실루엣 + 선명한 삼각망
+    const geo = new THREE.SphereGeometry(1, 22, 16);
+    const pos = geo.attributes.position;
+    const v = new THREE.Vector3();
+    for(let i=0;i<pos.count;i++){
+      v.fromBufferAttribute(pos, i);
+      let x = v.x, y = v.y, z = v.z;
+      const jawTaper = y < -0.1 ? 1 - Math.pow(Math.min(1, (-y-0.1)/0.9), 1.5) * 0.34 : 1;
+      x *= jawTaper; z *= jawTaper;
+      if(z < -0.25){ z = -0.25 + (z + 0.25) * 0.55; } // 뒤통수 살짝 평평하게
+      pos.setXYZ(i, x, y, z);
+    }
+    geo.computeVertexNormals();
+    geo.scale(1, 1.2, 0.92);
+
+    const NET_COLOR = 0x5fd4ff;
+    const lineMat = new THREE.LineBasicMaterial({ color:NET_COLOR, transparent:true, opacity:0.9 });
+    const fillMat = new THREE.MeshBasicMaterial({ color:0x0a1626, transparent:true, opacity:0.4 });
+
+    function net(bodyGeo){
+      const mesh = new THREE.Mesh(bodyGeo, fillMat);
+      mesh.add(new THREE.LineSegments(new THREE.WireframeGeometry(bodyGeo), lineMat));
+      return mesh;
+    }
+
+    const head = net(geo);
+
+    function makeEar(sign){
+      const earGeo = new THREE.TorusGeometry(0.13, 0.05, 6, 14, Math.PI * 1.5);
+      const ear = net(earGeo);
+      ear.scale.set(0.55, 1.25, 0.4);
+      ear.rotation.set(0.15, sign * Math.PI/2, sign * -1.0);
+      ear.position.set(sign * 0.92, -0.02, -0.02);
+      return ear;
+    }
+
+    const neck = net(new THREE.CylinderGeometry(0.32, 0.42, 0.5, 16, 3, true));
+    neck.position.set(0, -1.14, -0.02);
+
+    const chest = net(new THREE.CylinderGeometry(0.85, 1.5, 0.65, 20, 2, true));
+    chest.position.set(0, -1.72, -0.02);
+
+    const group = new THREE.Group();
+    group.add(head, neck, chest, makeEar(-1), makeEar(1));
+    group.position.y = -0.05;
+    return group;
+  }
+
+  function onResize(){
+    if(!renderer) return;
+    const w = container.clientWidth, h = container.clientHeight;
+    if(!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+
+  function sph(thetaDeg, phiDeg, r){
+    const t = thetaDeg * Math.PI/180, p = phiDeg * Math.PI/180;
+    const y = Math.cos(t), rxy = Math.sin(t);
+    return new THREE.Vector3(rxy*Math.sin(p), y, rxy*Math.cos(p)).multiplyScalar(r);
+  }
+
+  function setMarkers(markers, elements){
+    markerData = markers.map((m, i)=>{
+      const normal = sph(m.theta, m.phi, 1);
+      const local = sph(m.theta, m.phi, 1.04);
+      const world = new THREE.Vector3(local.x, local.y*1.22 - 0.05, local.z*0.94);
+      return { el: elements[i], worldPos: world, normal };
+    });
+  }
+
+  function animate(){
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    updateMarkerScreenPositions();
+  }
+
+  function updateMarkerScreenPositions(){
+    if(!markerData.length) return;
+    const w = container.clientWidth, h = container.clientHeight;
+    const tooltip = document.getElementById('tooltip');
+    markerData.forEach(md=>{
+      const toCam = camera.position.clone().sub(md.worldPos).normalize();
+      const facing = md.normal.dot(toCam);
+      const p = md.worldPos.clone().project(camera);
+      const x = (p.x*0.5+0.5) * w;
+      const y = (1-(p.y*0.5+0.5)) * h;
+      md.el.style.left = x + 'px';
+      md.el.style.top = y + 'px';
+      const visible = facing > 0.08;
+      md.el.style.display = visible ? '' : 'none';
+      if(!visible && md.el.classList.contains('selected')){
+        md.el.classList.remove('selected');
+        tooltip.classList.remove('show');
+      } else if(md.el.classList.contains('selected')){
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+      }
+    });
+  }
+
+  return { init, setMarkers };
+})();
+
+/* ---------------- 마커 & 툴팁 ---------------- */
+function renderMarkers(){
+  const layer = document.getElementById('marker-layer');
+  layer.innerHTML = '';
+  const elements = currentProduct.markers.map((m, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'marker';
+    el.dataset.idx = idx;
+    el.onclick = (e)=>{ e.stopPropagation(); showTooltip(idx); };
+    layer.appendChild(el);
+    return el;
+  });
+  if(typeof THREE !== 'undefined') Face3D.setMarkers(currentProduct.markers, elements);
+}
+
+function showTooltip(idx){
+  document.querySelectorAll('.marker').forEach(m=>m.classList.remove('selected'));
+  const markerEl = document.querySelector(`.marker[data-idx="${idx}"]`);
+  markerEl.classList.add('selected');
+
+  const m = currentProduct.markers[idx];
+  const tip = document.getElementById('tooltip');
+  tip.innerHTML = `<b>${m.label}</b>${m.desc}`;
+  tip.classList.add('show');
+}
+
+function hideTooltip(){
+  document.getElementById('tooltip').classList.remove('show');
+  document.querySelectorAll('.marker').forEach(m=>m.classList.remove('selected'));
+}
+
+document.getElementById('face-stage').addEventListener('click', hideTooltip);
+
+/* ---------------- 스텝 타임라인 ---------------- */
+function renderSteps(){
+  const wrap = document.getElementById('steps-list');
+  wrap.innerHTML = currentProduct.steps.map((s,i)=>`
+    <div class="step-v">
+      <div class="step-num">${i+1}</div>
+      <p>${s}</p>
+    </div>
+  `).join('');
+}
+
+/* ---------------- 영상 토글 ---------------- */
+function toggleVideo(){
+  const toggle = document.getElementById('video-toggle');
+  const isOn = toggle.classList.toggle('on');
+  document.getElementById('face-stage').style.display = isOn ? 'none' : 'block';
+  document.getElementById('video-mock').style.display = isOn ? 'flex' : 'none';
+  document.getElementById('chart-hint').style.display = isOn ? 'none' : 'block';
+  if(!isOn) hideTooltip();
+}
+
+/* ---------------- 초기 렌더 ---------------- */
+applyFilters();
+history.replaceState({ productId: null, scrollY: 0 }, '', location.pathname + location.search);
+</script>
+
+</body>
+</html>
