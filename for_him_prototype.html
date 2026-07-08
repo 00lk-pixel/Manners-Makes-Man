@@ -168,7 +168,7 @@
   .face-stage{
     position:relative;
     height:320px;
-    background:radial-gradient(circle at 50% 34%, #16243c 0%, #060911 82%);
+    background:radial-gradient(circle at 50% 36%, #e9e6df 0%, #cdc8bd 82%);
     overflow:hidden;
   }
   .face-stage canvas{
@@ -179,25 +179,25 @@
   .face3d-fallback{
     position:absolute;inset:0;display:none;
     align-items:center;justify-content:center;
-    text-align:center;padding:30px;font-size:12.5px;color:#9fb3c8;
+    text-align:center;padding:30px;font-size:12.5px;color:var(--sub);
   }
   #marker-layer{position:absolute;inset:0;pointer-events:none;z-index:2;}
   .marker{
     position:absolute;width:16px;height:16px;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background:#4fd6ff;
-    border:2px solid #eaf7ff;
-    box-shadow:0 0 0 0 rgba(79,214,255,.55);
+    background:var(--accent);
+    border:2px solid #fff;
+    box-shadow:0 0 0 0 rgba(107,43,43,.55);
     animation:pulse 2s infinite;
     cursor:pointer;z-index:2;
     pointer-events:auto;
   }
-  .marker.selected{background:#eaf7ff;}
+  .marker.selected{background:var(--ink);}
   @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(79,214,255,.5);}
-    70%{box-shadow:0 0 0 12px rgba(79,214,255,0);}
-    100%{box-shadow:0 0 0 0 rgba(79,214,255,0);}
+    0%{box-shadow:0 0 0 0 rgba(107,43,43,.5);}
+    70%{box-shadow:0 0 0 12px rgba(107,43,43,0);}
+    100%{box-shadow:0 0 0 0 rgba(107,43,43,0);}
   }
   .tooltip{
     position:absolute;max-width:200px;
@@ -257,6 +257,7 @@
 </style>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
@@ -490,9 +491,16 @@ window.addEventListener('popstate', (e)=>{
 /* ---------------- 3D 얼굴 모델 ---------------- */
 let face3dReady = false;
 
+const HEAD_MODEL_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb';
+const HEAD_COLOR = 0xb7b1a4;
+const WIRE_COLOR = 0x2c3e63;
+
 const Face3D = (function(){
-  let scene, camera, renderer, controls, container;
+  let scene, camera, renderer, controls, container, headGroup;
   let markerData = [];
+  let currentMarkerSpec = null;
+  // 실제 모델이 로드되기 전까지는 절차적 두상 비율(1, 1.22, 0.94)을 기본값으로 사용
+  let headFit = { halfExtents: new THREE.Vector3(1, 1.22, 0.94) };
 
   function init(){
     container = document.getElementById('face-stage');
@@ -519,7 +527,11 @@ const Face3D = (function(){
     rim.position.set(-3, 1.2, -2.5);
     scene.add(rim);
 
-    scene.add(buildHead());
+    headGroup = new THREE.Group();
+    headGroup.position.y = -0.05;
+    scene.add(headGroup);
+    headGroup.add(buildProceduralHead()); // 실제 모델 로딩 전/실패 시 보여줄 기본값
+    loadRealHead();
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0.1, 0);
@@ -539,52 +551,121 @@ const Face3D = (function(){
     animate();
   }
 
-  function buildHead(){
-    // 스캔 홀로그램 느낌의 저해상도 그물망(net) 와이어프레임 — 매끈한 실루엣 + 선명한 삼각망
-    const geo = new THREE.SphereGeometry(1, 22, 16);
+  function net(bodyGeo, mat, wireMat){
+    const mesh = new THREE.Mesh(bodyGeo, mat);
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo, 22), wireMat));
+    return mesh;
+  }
+
+  // 실제 남성 3D 얼굴 스캔(Lee Perry-Smith, three.js 공식 예제 자산)을 불러와
+  // 우리 사이트 톤에 맞는 셰이딩 + 은은한 스캔 메시 라인을 입힌다
+  function loadRealHead(){
+    if(typeof THREE.GLTFLoader === 'undefined') return;
+    new THREE.GLTFLoader().load(
+      HEAD_MODEL_URL,
+      (gltf)=>{
+        const real = gltf.scene;
+        const box = new THREE.Box3().setFromObject(real);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const scale = 2.3 / size.y; // 기존 절차적 두상과 비슷한 세로 크기로 정규화
+
+        real.scale.setScalar(scale);
+        real.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+
+        const mat = new THREE.MeshStandardMaterial({ color:HEAD_COLOR, roughness:0.62, metalness:0.03 });
+        const scanWire = new THREE.LineBasicMaterial({ color:WIRE_COLOR, transparent:true, opacity:0.12 });
+        real.traverse(obj=>{
+          if(obj.isMesh){
+            obj.material = mat;
+            obj.add(new THREE.LineSegments(new THREE.WireframeGeometry(obj.geometry), scanWire));
+          }
+        });
+
+        const wireMat = new THREE.LineBasicMaterial({ color:WIRE_COLOR, transparent:true, opacity:0.5 });
+        const headBottom = (box.min.y - center.y) * scale;
+        const neck = net(new THREE.CylinderGeometry(0.33, 0.46, 0.5, 24, 2, true), mat, wireMat);
+        neck.position.set(0, headBottom + 0.2, -0.02);
+        const chest = net(new THREE.CylinderGeometry(0.92, 1.55, 0.65, 28, 2, true), mat, wireMat);
+        chest.position.set(0, headBottom - 0.4, -0.02);
+
+        headGroup.clear();
+        headGroup.add(real, neck, chest);
+
+        headFit = { halfExtents: size.clone().multiplyScalar(scale / 2) };
+        if(currentMarkerSpec) applyMarkerFit();
+      },
+      undefined,
+      ()=>{ /* 네트워크 문제 등으로 실패하면 절차적 두상을 그대로 둔다 */ }
+    );
+  }
+
+  function buildProceduralHead(){
+    // 참고 이미지(와이어프레임 남성 흉상)처럼 실제 이목구비가 읽히도록 고해상도 메시에
+    // 이마/눈두덩/눈/코/입/턱 굴곡을 순서대로 조각하고, 셰이딩 + 은은한 그물망 라인을 함께 얹는다
+    const geo = new THREE.SphereGeometry(1, 48, 40);
     const pos = geo.attributes.position;
     const v = new THREE.Vector3();
     for(let i=0;i<pos.count;i++){
       v.fromBufferAttribute(pos, i);
       let x = v.x, y = v.y, z = v.z;
-      const jawTaper = y < -0.1 ? 1 - Math.pow(Math.min(1, (-y-0.1)/0.9), 1.5) * 0.34 : 1;
+
+      const jawT = Math.max(0, Math.min(1, (-y - 0.05) / 0.95));
+      const jawTaper = y < -0.05 ? 1 - Math.pow(jawT, 1.6) * 0.36 : 1;
       x *= jawTaper; z *= jawTaper;
-      if(z < -0.25){ z = -0.25 + (z + 0.25) * 0.55; } // 뒤통수 살짝 평평하게
+      if(z < -0.3){ z = -0.3 + (z + 0.3) * 0.55; }
+
+      const cheekMask = Math.max(0, 1 - Math.abs(y + 0.15) / 0.22);
+      if(z > 0.1){ x *= 1 + 0.07 * cheekMask; }
+
+      const browMask = Math.max(0, 1 - Math.abs(y - 0.18) / 0.07) * Math.max(0, 1 - Math.abs(x) / 0.42);
+      if(z > 0.5){ z += 0.035 * browMask; }
+
+      const eyeDx = (Math.abs(x) - 0.32) / 0.15;
+      const eyeDy = (y - 0.07) / 0.1;
+      const eyeDist = Math.hypot(eyeDx, eyeDy);
+      if(z > 0.55 && eyeDist < 1){
+        z -= 0.055 * (1 - eyeDist);
+        if(eyeDist < 0.45){ z += 0.05 * (1 - eyeDist / 0.45); }
+      }
+
+      const noseBridge = Math.max(0, 1 - Math.abs(x) / 0.09) * Math.max(0, 1 - Math.abs(y - 0.06) / 0.24);
+      const noseTip = Math.max(0, 1 - Math.hypot(x / 0.13, (y + 0.16) / 0.11));
+      if(z > 0.2){ z += 0.16 * noseBridge + 0.24 * noseTip; }
+
+      const mouthMask = Math.max(0, 1 - Math.hypot(x / 0.26, (y + 0.46) / 0.09));
+      if(z > 0.3){ z += 0.07 * mouthMask; }
+
+      const chinMask = Math.max(0, 1 - Math.hypot(x / 0.16, (y + 0.64) / 0.1));
+      if(z > 0.1){ z += 0.06 * chinMask; }
+
       pos.setXYZ(i, x, y, z);
     }
     geo.computeVertexNormals();
-    geo.scale(1, 1.2, 0.92);
+    geo.scale(1, 1.22, 0.94);
 
-    const NET_COLOR = 0x5fd4ff;
-    const lineMat = new THREE.LineBasicMaterial({ color:NET_COLOR, transparent:true, opacity:0.9 });
-    const fillMat = new THREE.MeshBasicMaterial({ color:0x0a1626, transparent:true, opacity:0.4 });
+    const mat = new THREE.MeshStandardMaterial({ color:HEAD_COLOR, roughness:0.62, metalness:0.03 });
+    const wireMat = new THREE.LineBasicMaterial({ color:WIRE_COLOR, transparent:true, opacity:0.5 });
 
-    function net(bodyGeo){
-      const mesh = new THREE.Mesh(bodyGeo, fillMat);
-      mesh.add(new THREE.LineSegments(new THREE.WireframeGeometry(bodyGeo), lineMat));
-      return mesh;
-    }
-
-    const head = net(geo);
+    const head = net(geo, mat, wireMat);
 
     function makeEar(sign){
-      const earGeo = new THREE.TorusGeometry(0.13, 0.05, 6, 14, Math.PI * 1.5);
-      const ear = net(earGeo);
-      ear.scale.set(0.55, 1.25, 0.4);
+      const earGeo = new THREE.TorusGeometry(0.14, 0.055, 8, 18, Math.PI * 1.55);
+      const ear = net(earGeo, mat, wireMat);
+      ear.scale.set(0.55, 1.25, 0.42);
       ear.rotation.set(0.15, sign * Math.PI/2, sign * -1.0);
-      ear.position.set(sign * 0.92, -0.02, -0.02);
+      ear.position.set(sign * 0.93, -0.02, -0.02);
       return ear;
     }
 
-    const neck = net(new THREE.CylinderGeometry(0.32, 0.42, 0.5, 16, 3, true));
-    neck.position.set(0, -1.14, -0.02);
+    const neck = net(new THREE.CylinderGeometry(0.33, 0.44, 0.5, 24, 2, true), mat, wireMat);
+    neck.position.set(0, -1.15, -0.02);
 
-    const chest = net(new THREE.CylinderGeometry(0.85, 1.5, 0.65, 20, 2, true));
-    chest.position.set(0, -1.72, -0.02);
+    const chest = net(new THREE.CylinderGeometry(0.88, 1.5, 0.65, 28, 2, true), mat, wireMat);
+    chest.position.set(0, -1.73, -0.02);
 
     const group = new THREE.Group();
     group.add(head, neck, chest, makeEar(-1), makeEar(1));
-    group.position.y = -0.05;
     return group;
   }
 
@@ -597,18 +678,30 @@ const Face3D = (function(){
     renderer.setSize(w, h);
   }
 
-  function sph(thetaDeg, phiDeg, r){
+  function sph(thetaDeg, phiDeg){
     const t = thetaDeg * Math.PI/180, p = phiDeg * Math.PI/180;
     const y = Math.cos(t), rxy = Math.sin(t);
-    return new THREE.Vector3(rxy*Math.sin(p), y, rxy*Math.cos(p)).multiplyScalar(r);
+    return new THREE.Vector3(rxy*Math.sin(p), y, rxy*Math.cos(p));
   }
 
   function setMarkers(markers, elements){
-    markerData = markers.map((m, i)=>{
-      const normal = sph(m.theta, m.phi, 1);
-      const local = sph(m.theta, m.phi, 1.04);
-      const world = new THREE.Vector3(local.x, local.y*1.22 - 0.05, local.z*0.94);
-      return { el: elements[i], worldPos: world, normal };
+    currentMarkerSpec = { markers, elements };
+    applyMarkerFit();
+  }
+
+  // 두상 데이터(절차적 기본값 또는 실제 로드된 모델의 바운딩 박스)에 맞춰
+  // 구면좌표 마커를 표면 근처 타원체 위치로 재투영한다
+  function applyMarkerFit(){
+    const offset = headGroup.position;
+    const he = headFit.halfExtents;
+    markerData = currentMarkerSpec.markers.map((m, i)=>{
+      const dir = sph(m.theta, m.phi);
+      const world = new THREE.Vector3(
+        dir.x * he.x * 1.04 + offset.x,
+        dir.y * he.y * 1.04 + offset.y,
+        dir.z * he.z * 1.04 + offset.z
+      );
+      return { el: currentMarkerSpec.elements[i], worldPos: world, normal: dir };
     });
   }
 
