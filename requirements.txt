@@ -1,1 +1,2 @@
+# Streamlit app dependency
 streamlit>=1.32,<2

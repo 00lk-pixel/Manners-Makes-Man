@@ -80,6 +80,34 @@
   }
   .chip.active{background:var(--ink);color:var(--card);border-color:var(--ink);}
 
+  .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+  .filter-group{position:relative;}
+  .filter-toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:13px;font-weight:700;
+    cursor:pointer;transition:all .18s;
+  }
+  .filter-toggle:hover{border-color:var(--ink);}
+  .filter-toggle::after{content:'▾';font-size:12px;color:var(--sub);}
+  .filter-current{font-size:12px;font-weight:500;color:var(--sub);}
+  .filter-panel{
+    position:absolute;top:100%;left:0;right:0;z-index:10;
+    display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px 14px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.08);margin-top:10px;
+  }
+  .filter-panel.hidden{display:none;}
+  .filter-option{
+    padding:8px 12px;border-radius:999px;border:1px solid var(--line);
+    background:transparent;color:var(--sub);cursor:pointer;white-space:nowrap;
+    transition:all .18s;
+  }
+  .filter-option:hover{border-color:var(--ink);color:var(--ink);}
+  .filter-option.active{background:var(--ink);border-color:var(--ink);color:var(--card);}
+  .filter-panel::-webkit-scrollbar{height:6px;}
+  .filter-panel::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px;}
+
   .section-label{
     font-size:11px;font-weight:600;color:var(--sub);
     letter-spacing:1px;text-transform:uppercase;
@@ -296,8 +324,22 @@
   <div class="layout">
     <!-- ===== 왼쪽 : 필터 + 제품 그리드 ===== -->
     <section class="left-panel">
-      <div class="chip-row" id="category-chips"></div>
-      <div class="chip-row" id="price-chips"></div>
+          <div class="filter-row">
+        <div class="filter-group">
+          <button class="filter-toggle" type="button" onclick="toggleFilterPanel('category-panel')">
+            카테고리
+            <strong class="filter-current" id="category-current">전체</strong>
+          </button>
+          <div class="filter-panel hidden" id="category-panel"></div>
+        </div>
+        <div class="filter-group">
+          <button class="filter-toggle" type="button" onclick="toggleFilterPanel('price-panel')">
+            가격대
+            <strong class="filter-current" id="price-current">전체</strong>
+          </button>
+          <div class="filter-panel hidden" id="price-panel"></div>
+        </div>
+      </div>
 
       <div class="section-label">등록된 제품 · 카드를 선택하면 오른쪽에서 사용법을 볼 수 있어요</div>
       <div class="product-grid" id="product-list"></div>
@@ -347,13 +389,14 @@
 
 <script>
 /* ---------------- 더미 데이터 ---------------- */
-const CATEGORIES = ["전체","스킨케어","베이스","색조"];
-const PRICE_RANGES = ["전체","1만원대","2만원대","3만원대+"];
+const CATEGORIES = ["전체","스킨케어","베이스","브로우","헤어"];
+const PRICE_RANGES = ["전체","1만원 이하","1~2만원","2~3만원","3만원+"];
 
 const ICONS = {
   "스킨케어": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2c2.5 3 5 6.5 5 10a5 5 0 1 1-10 0c0-3.5 2.5-7 5-10Z"/></svg>',
   "베이스": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/></svg>',
-  "색조": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 3h6l1 6h-8l1-6Z"/><path d="M9 9h6l-.7 10.2a1.5 1.5 0 0 1-1.5 1.3h-1.6a1.5 1.5 0 0 1-1.5-1.3L9 9Z"/></svg>'
+  "브로우": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19c2.8-4.3 7.5-7 12-7 2 0 4 .8 5 2.1"/><path d="M6 12.5c1.5-2 3.3-3.3 5.5-3.6"/></svg>',
+  "헤어": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3c3 0 5.5 2.4 5.5 5.3 0 .5 0 1-.2 1.5"/><path d="M6.5 8.1C6.4 8 6 7.3 6 6.7 6 4 8 2 10.5 2c1.8 0 3.4 1.1 4.2 2.6"/><path d="M5 21c2-2.4 4.8-4 8-4s6 1.6 8 4"/></svg>'
 };
 
 /* 마커 좌표는 구면 좌표계(theta: 정수리 0°→턱 180°, phi: 정면 0°→좌우 ±90°)로 정의해서
@@ -361,7 +404,7 @@ const ICONS = {
 const PRODUCTS = [
   {
     id:1, name:"수분 선크림", brand:"이니스프리",
-    category:"스킨케어", price:18000, priceTag:"1만원대",
+    category:"스킨케어", price:18000, priceTag:"1~2만원",
     markers:[
       {theta:52, phi:0,   label:"이마 T존", desc:"이마 T존에 동전 크기만큼 덜어 골고루 펴발라요"},
       {theta:88, phi:-32, label:"왼쪽 볼", desc:"양볼에 콩알만큼 덧발라 자외선을 꼼꼼히 막아요"},
@@ -371,7 +414,7 @@ const PRODUCTS = [
   },
   {
     id:2, name:"톤업 선크림", brand:"라운드어라운드",
-    category:"베이스", price:22000, priceTag:"2만원대",
+    category:"베이스", price:22000, priceTag:"2~3만원",
     markers:[
       {theta:52, phi:0,   label:"이마", desc:"이마에 소량 두드려 발라 톤을 정리해요"},
       {theta:76, phi:-20, label:"눈 밑", desc:"다크서클 부위는 손끝으로 가볍게 두드려 발라요"},
@@ -382,20 +425,29 @@ const PRODUCTS = [
   },
   {
     id:3, name:"글로우 틴트", brand:"롬앤",
-    category:"색조", price:15000, priceTag:"1만원대",
+    category:"브로우", price:15000, priceTag:"1~2만원",
     markers:[
-      {theta:112, phi:0, label:"입술 중앙", desc:"입술 중앙에 콕 찍고 입술 라인 안쪽으로만 펴발라요"}
+      {theta:102, phi:-18, label:"왼쪽 눈썹", desc:"눈썹 시작점부터 결을 따라 가볍게 쓸어 올려요"},
+      {theta:102, phi:18, label:"오른쪽 눈썹", desc:"눈썹 아치 부분을 자연스럽게 채워요"}
     ],
-    steps:["입술 각질 정리","입술 중앙에 톡 찍기","입술을 안으로 말아 자연스럽게 펴바르기"]
+    steps:["브로우 펜슬 끝을 깎아 사용 준비","결을 따라 가볍게 채우기","스풀리로 앞뒤로 빗어 자연스럽게 정리"]
   },
   {
     id:4, name:"컨실러 스틱", brand:"클리오",
-    category:"베이스", price:14000, priceTag:"1만원대",
+    category:"베이스", price:14000, priceTag:"1~2만원",
     markers:[
       {theta:76, phi:-20, label:"왼쪽 다크서클", desc:"다크서클 부위에 점을 찍듯 얹고 손끝으로 톡톡 펴발라요"},
       {theta:76, phi:20,  label:"오른쪽 다크서클", desc:"다크서클 부위에 점을 찍듯 얹고 손끝으로 톡톡 펴발라요"}
     ],
     steps:["베이스 제품 먼저 마무리","다크서클 위에 얇게 점 찍기","약지로 두드리듯 경계 없이 펴바르기"]
+  },
+  {
+    id:5, name:"스타일링 헤어밤", brand:"미쟝센",
+    category:"헤어", price:25000, priceTag:"2~3만원",
+    markers:[
+      {theta:22, phi:0, label:"이마 라인", desc:"정수리 쪽에 소량 덜어 앞머리 라인에 부드럽게 펴바르세요"}
+    ],
+    steps:["손바닥에 소량 덜어 온기를 내기","정수리 중심에서 바깥쪽으로 펴 바르기","흐트러진 앞머리를 손가락으로 정돈"]
   }
 ];
 
@@ -405,15 +457,41 @@ let activePrice = "전체";
 let currentProduct = null;
 
 /* ---------------- 필터 렌더 ---------------- */
-function renderChips(containerId, items, activeValue, onClick){
+function renderFilterOptions(containerId, items, activeValue, onClick){
   const wrap = document.getElementById(containerId);
+  if (!wrap) return;
   wrap.innerHTML = items.map(item =>
-    `<div class="chip ${item===activeValue?'active':''}" onclick="${onClick}('${item}')">${item}</div>`
+    `<button type="button" class="filter-option ${item===activeValue?'active':''}" onclick="${onClick}('${item}')">${item}</button>`
   ).join('');
 }
 
-function selectCategory(val){ activeCategory = val; applyFilters(); }
-function selectPrice(val){ activePrice = val; applyFilters(); }
+function renderFilters(){
+  renderFilterOptions('category-panel', CATEGORIES, activeCategory, 'selectCategory');
+  renderFilterOptions('price-panel', PRICE_RANGES, activePrice, 'selectPrice');
+  document.getElementById('category-current').textContent = activeCategory;
+  document.getElementById('price-current').textContent = activePrice;
+}
+
+function toggleFilterPanel(panelId){
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const isHidden = panel.classList.contains('hidden');
+  closeFilterPanels();
+  if (isHidden) panel.classList.remove('hidden');
+}
+
+function closeFilterPanels(){
+  document.querySelectorAll('.filter-panel').forEach(panel => panel.classList.add('hidden'));
+}
+
+document.addEventListener('click', event => {
+  if (!event.target.closest('.filter-group')) {
+    closeFilterPanels();
+  }
+});
+
+function selectCategory(val){ activeCategory = val; renderFilters(); applyFilters(); closeFilterPanels(); }
+function selectPrice(val){ activePrice = val; renderFilters(); applyFilters(); closeFilterPanels(); }
 
 function applyFilters(keyword=""){
   currentFiltered = PRODUCTS.filter(p=>{
@@ -422,8 +500,7 @@ function applyFilters(keyword=""){
     const matchKeyword = !keyword || p.name.includes(keyword) || p.brand.includes(keyword);
     return matchCat && matchPrice && matchKeyword;
   });
-  renderChips('category-chips', CATEGORIES, activeCategory, 'selectCategory');
-  renderChips('price-chips', PRICE_RANGES, activePrice, 'selectPrice');
+  renderFilters();
   renderProductGrid();
 }
 
@@ -810,6 +887,7 @@ function toggleVideo(){
 }
 
 /* ---------------- 초기 렌더 ---------------- */
+renderFilters();
 applyFilters();
 history.replaceState({ productId: null, scrollY: 0 }, '', location.pathname + location.search);
 </script>

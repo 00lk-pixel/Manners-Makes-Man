@@ -16,6 +16,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="For Him - AI 뷰티 가이드", page_icon="🧴", layout="wide")
 
+# Load the prototype HTML viewer that now includes expandable category/price filters.
 HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 

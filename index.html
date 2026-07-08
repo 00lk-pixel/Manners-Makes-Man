@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEN·CARE 추천 · 시작</title>
+<style>
+:root {
+  --bg: #EEEBE3; --paper: #FFFFFF; --ink: #23262B; --ink-soft: #5B6169;
+  --line: #DBD6C9; --teal: #2F6F62; --teal-dark: #234F45; --rust: #C1613B;
+  --slate: #8B93A1; --radius: 18px;
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  -webkit-font-smoothing:antialiased; }
+.app-shell { max-width:480px; margin:0 auto; min-height:100vh; background:var(--paper);
+  box-shadow:0 0 40px rgba(0,0,0,0.06); display:flex; flex-direction:column; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 22px;
+  border-bottom:1px solid var(--line); }
+.brand { font-weight:800; letter-spacing:0.06em; color:var(--teal-dark); text-decoration:none; font-size:15px; }
+.saved-link { font-size:13px; color:var(--ink-soft); text-decoration:none; border:1px solid var(--line);
+  padding:6px 12px; border-radius:999px; }
+.saved-link:hover { border-color:var(--rust); color:var(--rust); }
+.content { flex:1; padding:28px 22px 40px; }
+.hero-eyebrow { text-transform:uppercase; letter-spacing:0.14em; font-size:11px; color:var(--rust);
+  font-weight:700; margin:0 0 10px; }
+.hero h1 { font-size:28px; line-height:1.35; margin:0 0 14px; font-weight:800; letter-spacing:-0.01em; }
+.hero-desc { color:var(--ink-soft); line-height:1.6; font-size:14.5px; margin-bottom:26px; }
+.btn-primary { display:inline-block; background:var(--teal-dark); color:#fff; text-decoration:none;
+  padding:14px 22px; border-radius:999px; font-weight:700; font-size:14.5px; border:none; cursor:pointer; text-align:center; }
+.btn-primary:active { transform:scale(0.98); }
+.btn-ghost { display:inline-block; background:transparent; color:var(--ink-soft); text-decoration:none;
+  padding:13px 20px; border-radius:999px; font-weight:600; font-size:14px; border:1px solid var(--line);
+  cursor:pointer; text-align:center; }
+.info-cards { margin-top:36px; display:flex; flex-direction:column; gap:12px; }
+.info-card { border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; background:#FBFAF7; }
+.info-card .tag { font-size:10.5px; letter-spacing:0.1em; color:var(--teal); font-weight:800; }
+.info-card h3 { margin:6px 0 4px; font-size:16px; }
+.info-card p { margin:0; color:var(--ink-soft); font-size:13.5px; }
+@media (max-width:380px) { .content { padding:22px 16px 32px; } .hero h1 { font-size:24px; } }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a href="/" class="brand">MEN·CARE</a>
+      <a href="/saved" class="saved-link">찜한 제품</a>
+    </header>
+    <main class="content">
+      <section class="hero">
+        <p class="hero-eyebrow">화장품 매장이 아직 낯선 당신에게</p>
+        <h1>복잡한 루틴 없이,<br>딱 필요한 제품만 추천해드려요</h1>
+        <p class="hero-desc">
+          민현우, 28세, 영업 신입사원. 화장품에 대한 개념이 없는 초보자도
+          "무엇을, 왜 써야 하는지"부터 자연스럽게 알아갈 수 있도록 설계했어요.
+        </p>
+        <a class="btn-primary" href="/profile">1분만에 내 취향 설정하기</a>
+      </section>
+      <section class="info-cards">
+        <div class="info-card">
+          <span class="tag">STEP 1</span>
+          <h3>간단 프로필 설정</h3>
+          <p>나이대, 피부타입, 고민만 골라주세요. 어렵지 않아요.</p>
+        </div>
+        <div class="info-card">
+          <span class="tag">STEP 2</span>
+          <h3>상황(모드) 선택</h3>
+          <p>데일리 · 이벤트 · 데이트 — 오늘 필요한 만큼만 준비해요.</p>
+        </div>
+        <div class="info-card">
+          <span class="tag">STEP 3</span>
+          <h3>카드 스와이프</h3>
+          <p>마음에 들면 오른쪽, 아니면 왼쪽. 취향이 쌓일수록 추천이 똑똑해져요.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
