@@ -6,13 +6,15 @@
 <title>For Him - AI 뷰티 가이드 프로토타입</title>
 <style>
   :root{
-    --bg:#f7f6f3;
-    --card:#ffffff;
+    --bg:#fff3e0;
+    --card:#fffcf5;
     --ink:#1c1c1c;
-    --sub:#8a8580;
-    --line:#e6e1d8;
-    --accent:#6b2b2b;
-    --accent-soft:#f3e9e8;
+    --sub:#8a7a63;
+    --line:#f6ddb2;
+    --accent:#ffa500;
+    --accent-soft:#ffe9c7;
+    --btn-bg:#1c1c1c;
+    --btn-text:#fff8ec;
   }
   *{box-sizing:border-box;}
   body{
@@ -42,14 +44,38 @@
   .brand-sub{font-size:11px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;}
 
   /* ---------- hero ---------- */
-  .hero{padding:52px 0 28px;}
+  .hero{padding:96px 0;min-height:calc(100vh - 76px);display:flex;flex-direction:column;justify-content:center;}
   .hero h1{font-size:34px;line-height:1.45;margin-bottom:14px;}
-  .hero p{font-size:14px;color:var(--sub);margin:0 0 26px;}
+  .hero p{font-size:15px;color:var(--sub);margin:0 0 34px;}
+  .hero-actions{display:flex;flex-direction:column;gap:12px;max-width:380px;}
+  .hero-btn{
+    padding:17px 22px;border-radius:8px;
+    border:1.5px solid var(--ink);
+    background:var(--btn-text);color:var(--ink);
+    font-size:14.5px;font-weight:600;font-family:inherit;
+    cursor:pointer;transition:all .18s;text-align:left;
+  }
+  .hero-btn:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(28,28,28,.1);}
+  .hero-btn-primary{background:var(--btn-bg);color:var(--btn-text);border-color:var(--btn-bg);}
+  .hero-btn-primary:hover{box-shadow:0 10px 20px rgba(28,28,28,.22);}
+
+  /* ---------- catalog view ---------- */
+  .catalog-view{padding:36px 0 0;}
+  .catalog-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+  .back-home{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--card);border:1px solid var(--line);
+    cursor:pointer;font-size:15px;color:var(--ink);
+  }
+  .back-home:hover{border-color:var(--ink);}
+  .catalog-header h2{font-size:20px;}
   .search-box{
     max-width:440px;
     display:flex;align-items:center;gap:10px;
     border-bottom:1px solid var(--ink);
     padding:12px 2px;
+    margin-bottom:28px;
   }
   .search-box input{
     border:none;outline:none;background:transparent;
@@ -217,16 +243,16 @@
     border-radius:50%;
     background:var(--accent);
     border:2px solid #fff;
-    box-shadow:0 0 0 0 rgba(107,43,43,.55);
+    box-shadow:0 0 0 0 rgba(255,165,0,.55);
     animation:pulse 2s infinite;
     cursor:pointer;z-index:2;
     pointer-events:auto;
   }
   .marker.selected{background:var(--ink);}
   @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(107,43,43,.5);}
-    70%{box-shadow:0 0 0 12px rgba(107,43,43,0);}
-    100%{box-shadow:0 0 0 0 rgba(107,43,43,0);}
+    0%{box-shadow:0 0 0 0 rgba(255,165,0,.5);}
+    70%{box-shadow:0 0 0 12px rgba(255,165,0,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,165,0,0);}
   }
   .tooltip{
     position:absolute;max-width:200px;
@@ -313,77 +339,89 @@
 </header>
 
 <div class="wrap">
-  <div class="hero">
-    <h1>내 피부에 맞는<br>딱 필요한 만큼만 알려드려요</h1>
-    <p>가지고 있는 제품을 등록하면 바로 사용법을 안내해드려요</p>
-    <div class="search-box">
-      <input type="text" placeholder="내가 사용하는 제품 / 브랜드명 검색" oninput="filterProducts(this.value)">
+  <div class="hero" id="home-view">
+    <h1>OOO님, 오늘도 거울 앞에서 망설이셨나요?</h1>
+    <p>오늘 무슨 화장을 해야 할지 모르겠다면, MMM에서</p>
+    <div class="hero-actions">
+      <button class="hero-btn" type="button" onclick="comingSoon('제품 입력하기')">내가 쓰고 있는 제품 입력하기</button>
+      <button class="hero-btn" type="button" onclick="comingSoon('오늘의 메이크업 추천')">오늘의 메이크업 추천받기</button>
+      <button class="hero-btn hero-btn-primary" type="button" onclick="showCatalog()">화장품 사용법 알아보기</button>
     </div>
   </div>
 
-  <div class="layout">
-    <!-- ===== 왼쪽 : 필터 + 제품 그리드 ===== -->
-    <section class="left-panel">
-          <div class="filter-row">
-        <div class="filter-group">
-          <button class="filter-toggle" type="button" onclick="toggleFilterPanel('category-panel')">
-            카테고리
-            <strong class="filter-current" id="category-current">전체</strong>
-          </button>
-          <div class="filter-panel hidden" id="category-panel"></div>
-        </div>
-        <div class="filter-group">
-          <button class="filter-toggle" type="button" onclick="toggleFilterPanel('price-panel')">
-            가격대
-            <strong class="filter-current" id="price-current">전체</strong>
-          </button>
-          <div class="filter-panel hidden" id="price-panel"></div>
-        </div>
-      </div>
+  <div class="catalog-view" id="catalog-view" style="display:none;">
+    <div class="catalog-header">
+      <button class="back-home" type="button" onclick="goHome()" title="처음으로">←</button>
+      <h2>사용법이 궁금한 제품을 선택해보세요</h2>
+    </div>
+    <div class="search-box">
+      <input type="text" placeholder="내가 사용하는 제품 / 브랜드명 검색" oninput="filterProducts(this.value)">
+    </div>
 
-      <div class="section-label">등록된 제품 · 카드를 선택하면 오른쪽에서 사용법을 볼 수 있어요</div>
-      <div class="product-grid" id="product-list"></div>
-    </section>
-
-    <!-- ===== 오른쪽 : 페이스 차트 (고정) ===== -->
-    <aside class="right-panel" id="right-panel">
-      <div class="chart-empty" id="chart-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
-        <p>왼쪽에서 제품을 선택하면<br>이곳에 사용법 가이드가 나타나요</p>
-      </div>
-
-      <div class="chart-content" id="chart-content">
-        <div class="chart-topbar">
-          <div class="chart-title-wrap">
-            <button class="back-btn" onclick="history.back()" title="뒤로가기">←</button>
-            <p class="chart-title" id="chart-product-name">제품명</p>
+    <div class="layout">
+      <!-- ===== 왼쪽 : 필터 + 제품 그리드 ===== -->
+      <section class="left-panel">
+            <div class="filter-row">
+          <div class="filter-group">
+            <button class="filter-toggle" type="button" onclick="toggleFilterPanel('category-panel')">
+              카테고리
+              <strong class="filter-current" id="category-current">전체</strong>
+            </button>
+            <div class="filter-panel hidden" id="category-panel"></div>
           </div>
-          <div class="toggle-wrap">
-            <span class="toggle-label">영상으로 보기</span>
-            <div class="switch" id="video-toggle" onclick="toggleVideo()"></div>
+          <div class="filter-group">
+            <button class="filter-toggle" type="button" onclick="toggleFilterPanel('price-panel')">
+              가격대
+              <strong class="filter-current" id="price-current">전체</strong>
+            </button>
+            <div class="filter-panel hidden" id="price-panel"></div>
           </div>
         </div>
 
-        <div class="face-stage" id="face-stage">
-          <div class="face3d-fallback" id="face3d-fallback">3D 뷰어를 불러오지 못했어요.<br>인터넷 연결을 확인해주세요.</div>
-          <div id="marker-layer"></div>
-          <div class="tooltip" id="tooltip"></div>
+        <div class="section-label">등록된 제품 · 카드를 선택하면 오른쪽에서 사용법을 볼 수 있어요</div>
+        <div class="product-grid" id="product-list"></div>
+      </section>
+
+      <!-- ===== 오른쪽 : 페이스 차트 (고정) ===== -->
+      <aside class="right-panel" id="right-panel">
+        <div class="chart-empty" id="chart-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+          <p>왼쪽에서 제품을 선택하면<br>이곳에 사용법 가이드가 나타나요</p>
         </div>
 
-        <div class="video-mock" id="video-mock" style="display:none;">
-          <p class="video-caption" id="video-caption">사용법 영상</p>
-          <div class="play-btn">▶</div>
-          <span class="video-duration">0:42</span>
-        </div>
+        <div class="chart-content" id="chart-content">
+          <div class="chart-topbar">
+            <div class="chart-title-wrap">
+              <button class="back-btn" onclick="history.back()" title="뒤로가기">←</button>
+              <p class="chart-title" id="chart-product-name">제품명</p>
+            </div>
+            <div class="toggle-wrap">
+              <span class="toggle-label">영상으로 보기</span>
+              <div class="switch" id="video-toggle" onclick="toggleVideo()"></div>
+            </div>
+          </div>
 
-        <p class="hint" id="chart-hint">얼굴을 드래그해서 돌려보고, 표시된 포인트를 눌러 사용법을 확인하세요</p>
+          <div class="face-stage" id="face-stage">
+            <div class="face3d-fallback" id="face3d-fallback">3D 뷰어를 불러오지 못했어요.<br>인터넷 연결을 확인해주세요.</div>
+            <div id="marker-layer"></div>
+            <div class="tooltip" id="tooltip"></div>
+          </div>
 
-        <div class="steps-wrap">
-          <h3>사용 순서</h3>
-          <div id="steps-list"></div>
+          <div class="video-mock" id="video-mock" style="display:none;">
+            <p class="video-caption" id="video-caption">사용법 영상</p>
+            <div class="play-btn">▶</div>
+            <span class="video-duration">0:42</span>
+          </div>
+
+          <p class="hint" id="chart-hint">얼굴을 드래그해서 돌려보고, 표시된 포인트를 눌러 사용법을 확인하세요</p>
+
+          <div class="steps-wrap">
+            <h3>사용 순서</h3>
+            <div id="steps-list"></div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </div>
   </div>
 </div>
 
@@ -455,6 +493,23 @@ let currentFiltered = [...PRODUCTS];
 let activeCategory = "전체";
 let activePrice = "전체";
 let currentProduct = null;
+
+/* ---------------- 첫 화면 <-> 카탈로그 화면 ---------------- */
+function showCatalog(){
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('catalog-view').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function goHome(){
+  document.getElementById('catalog-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+function comingSoon(feature){
+  alert(feature + ' 기능은 준비 중이에요. 곧 만나요!');
+}
 
 /* ---------------- 필터 렌더 ---------------- */
 function renderFilterOptions(containerId, items, activeValue, onClick){
