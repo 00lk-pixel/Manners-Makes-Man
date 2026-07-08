@@ -183,9 +183,11 @@ body { margin:0; background:var(--bg); color:var(--ink);
   -webkit-font-smoothing:antialiased; }
 .app-shell { max-width:480px; margin:0 auto; min-height:100vh; background:var(--paper);
   box-shadow:0 0 40px rgba(0,0,0,0.06); display:flex; flex-direction:column; }
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:18px 22px;
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 22px;
   border-bottom:1px solid var(--line); }
-.brand { font-weight:800; letter-spacing:0.06em; color:var(--teal-dark); text-decoration:none; font-size:15px; }
+.brand { font-weight:800; letter-spacing:0.06em; color:var(--teal-dark); text-decoration:none; font-size:15px;
+  display:flex; align-items:center; line-height:0; }
+.brand svg { height:38px; width:auto; display:block; }
 .saved-link { font-size:13px; color:var(--ink-soft); text-decoration:none; border:1px solid var(--line);
   padding:6px 12px; border-radius:999px; }
 .saved-link:hover { border-color:var(--rust); color:var(--rust); }
@@ -280,7 +282,22 @@ input[type="range"] { width:100%; margin-bottom:18px; accent-color:var(--teal); 
   border-radius:16px; padding:16px; background:#FBFAF7; gap:12px; }
 .saved-item h3 { margin:4px 0; font-size:16px; }
 .saved-price { font-weight:800; white-space:nowrap; color:var(--teal-dark); }
-@media (max-width:380px) { .content { padding:22px 16px 32px; } .hero h1 { font-size:24px; } }
+@media (max-width:380px) { .content { padding:22px 16px 32px; } .hero h1 { font-size:24px; } .brand svg { height:32px; } }
+"""
+
+LOGO_SVG = """
+<svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Manners Makes Man">
+  <g fill="none" stroke="#23262B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M110 68 L134 18 L160 48 L186 18 L210 68"/>
+    <path d="M56 40 L78 50 L56 60"/>
+    <path d="M264 40 L242 50 L264 60"/>
+    <path d="M140 55 L150 66 M150 55 L140 66"/>
+    <path d="M170 55 L180 66 M180 55 L170 66"/>
+  </g>
+  <path d="M118 82 Q135 68 160 80 Q185 68 202 82 Q184 94 160 86 Q136 94 118 82 Z" fill="#23262B"/>
+  <text x="14" y="148" font-family="Georgia, 'Times New Roman', serif" font-weight="800" font-size="54" letter-spacing="4" fill="#23262B">MMM</text>
+  <text x="233" y="78" font-family="Georgia, serif" font-style="italic" font-size="14" fill="#23262B">by joeumi</text>
+</svg>
 """
 
 BASE_HTML = """
@@ -295,7 +312,7 @@ BASE_HTML = """
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a href="{{ url_for('index') }}" class="brand">MEN·CARE</a>
+      <a href="{{ url_for('index') }}" class="brand">""" + LOGO_SVG + """</a>
       <a href="{{ url_for('saved') }}" class="saved-link">찜한 제품</a>
     </header>
     <main class="content">
