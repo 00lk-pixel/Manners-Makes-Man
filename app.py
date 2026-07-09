@@ -87,7 +87,7 @@ if st.query_params.get("login") == "google":
         st.rerun()
 
 if st.query_params.get("signup") == "1":
-    name = st.query_params.get("name", "").strip() or "회원"
+    name = st.query_params.get("fullname", "").strip() or "회원"
     email = st.query_params.get("email", "").strip()
     st.query_params.clear()
     if email:
