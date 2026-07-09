@@ -152,12 +152,13 @@ if user:
 # 모두)가 브라우저에 의해 조용히 막힌다. 그래서 iframe 쪽(for_him_prototype.html)은
 # window.top.postMessage(...)로 "이런 일이 있었다"는 사실만 알리고, 실제 이동은 여기
 # 최상단 페이지 자신의 스크립트가 대신 수행한다 (자기 자신을 이동시키는 건 sandbox와
-# 무관하게 항상 허용됨). st.markdown(unsafe_allow_html=True)는 <script> 태그를 실행하지
-# 않으므로, innerHTML로 삽입돼도 실행되는 <img onerror=...> 트릭으로 최상단 페이지에
-# 진짜로 실행되는 스크립트를 심는다.
-st.markdown(
+# 무관하게 항상 허용됨). st.markdown(unsafe_allow_html=True)는 <script> 태그를 실제로는
+# 실행하지 않으므로(React가 raw HTML을 엘리먼트 트리로 변환해서 렌더링하기 때문),
+# st.html(..., unsafe_allow_javascript=True)를 대신 쓴다 - 이건 iframe 없이 최상단
+# 페이지 자신의 컨텍스트에서 그대로 실행된다.
+st.html(
     """
-    <img src="x" alt="" style="display:none" onerror="
+    <script>
       (function(){
         if (window.__mmmBridgeInstalled) return;
         window.__mmmBridgeInstalled = true;
@@ -182,9 +183,9 @@ st.markdown(
           window.location.search = params.toString();
         });
       })();
-    ">
+    </script>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_javascript=True,
 )
 
 components.html(html, height=880, scrolling=False)
