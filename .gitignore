@@ -1,0 +1,5 @@
+# 가입자 정보(이름/이메일)가 담기는 로컬 목업 저장소 - 절대 커밋하지 않음
+data/signups.json
+
+# Streamlit 로컬 secrets (Google OAuth 등) - 절대 커밋하지 않음
+.streamlit/secrets.toml

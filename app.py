@@ -10,6 +10,9 @@ Streamlit Cloud는 Streamlit 스크립트만 서빙할 수 있어서(순수 Flas
 실행: pip install -r requirements.txt && streamlit run app.py
 """
 
+import datetime
+import html as html_lib
+import json
 import pathlib
 import re
 
@@ -24,11 +27,32 @@ st.set_page_config(page_title="MMM — Makeup maketh man", page_icon="💄", lay
 # 자동으로 진짜 구글 로그인(real=True 경로)으로 전환된다.
 AUTH_CONFIGURED = "auth" in st.secrets
 st.session_state.setdefault("mock_logged_in", False)
+st.session_state.setdefault("signed_up_user", None)
 
-# 스플래시 안의 "Sign up with Google" 링크는 iframe 안에서 target="_top"으로
-# 최상단 페이지를 ?login=google 로 이동시킨다. 그걸 여기서 감지해서 로그인을
-# 시작시킨다 - 구글 인증/콜백은 iframe이 아니라 이 Streamlit 앱 자체 URL에서
-# 일어나야 하기 때문.
+# 이메일/비밀번호 가입자 명단 - 지금은 실제 DB가 없어서 가벼운 JSON 파일로 대체
+# (Streamlit Cloud가 재배포/재시작되면 파일이 초기화될 수 있는 데모 수준 저장소).
+# 비밀번호는 폼에서부터 여기로 아예 전달되지 않으므로 저장되지 않는다.
+SIGNUPS_PATH = pathlib.Path(__file__).parent / "data" / "signups.json"
+
+
+def save_signup(name, email):
+    SIGNUPS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        records = json.loads(SIGNUPS_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        records = []
+    records.append({
+        "name": name,
+        "email": email,
+        "signed_up_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    })
+    SIGNUPS_PATH.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# 스플래시 안의 "Sign up with Google" 링크와 이메일 가입 폼은 iframe 안에 있어서,
+# 둘 다 target="_top"으로 최상단 페이지를 ?login=google 또는 ?signup=1&name=...&email=...
+# 로 이동시킨다. 그걸 여기서 감지해서 처리한다 - 실제 저장/구글 인증 콜백이
+# iframe이 아니라 이 Streamlit 앱 자체 URL에서 일어나야 하기 때문.
 if st.query_params.get("login") == "google":
     st.query_params.clear()
     if AUTH_CONFIGURED:
@@ -38,11 +62,21 @@ if st.query_params.get("login") == "google":
         st.session_state["mock_logged_in"] = True
         st.rerun()
 
+if st.query_params.get("signup") == "1":
+    name = st.query_params.get("name", "").strip() or "회원"
+    email = st.query_params.get("email", "").strip()
+    st.query_params.clear()
+    if email:
+        save_signup(name, email)
+    st.session_state["signed_up_user"] = {"name": name, "email": email}
+    st.rerun()
+
 if st.query_params.get("logout") == "1":
     st.query_params.clear()
     if AUTH_CONFIGURED and st.user.is_logged_in:
         st.logout()
     st.session_state["mock_logged_in"] = False
+    st.session_state["signed_up_user"] = None
     st.rerun()
 
 # Streamlit의 기본 크롬(햄버거 메뉴/헤더/푸터)과 block-container 여백을 지워서
@@ -58,15 +92,18 @@ iframe { display: block; }
 HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 
-logged_in = (AUTH_CONFIGURED and st.user.is_logged_in) or st.session_state["mock_logged_in"]
+signed_up_user = st.session_state["signed_up_user"]
+logged_in = (AUTH_CONFIGURED and st.user.is_logged_in) or st.session_state["mock_logged_in"] or bool(signed_up_user)
 if logged_in:
     if AUTH_CONFIGURED and st.user.is_logged_in:
         name, email = st.user.name, st.user.email
+    elif signed_up_user:
+        name, email = signed_up_user["name"], signed_up_user["email"]
     else:
         name, email = "테스트 사용자", "google 연동 준비 중 (목업 로그인)"
     welcome_block = f"""
     <div class="splash-welcome">
-      <p>{name}님, 환영합니다 👋<br>{email}</p>
+      <p>{html_lib.escape(name)}님, 환영합니다 👋<br>{html_lib.escape(email)}</p>
       <a href="?logout=1" target="_top">로그아웃</a>
     </div>
     """
