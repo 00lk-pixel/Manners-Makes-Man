@@ -19,4 +19,4 @@ st.set_page_config(page_title="MMM — Makeup maketh man", page_icon="💄", lay
 HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 
-components.html(html, height=4200, scrolling=True)
+components.html(html, height=900, scrolling=True)
