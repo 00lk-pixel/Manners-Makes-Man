@@ -1,2 +1,3 @@
 # Streamlit app dependency
-streamlit>=1.32,<2
+streamlit>=1.42,<2
+Authlib>=1.3.2
