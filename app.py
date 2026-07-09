@@ -17,6 +17,16 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="MMM — Makeup maketh man", page_icon="💄", layout="wide")
 
+# Streamlit의 기본 크롬(햄버거 메뉴/헤더/푸터)과 block-container 여백을 지워서
+# iframe 콘텐츠가 액자 없이 화면을 그대로 채우는 것처럼 보이게 한다.
+st.markdown("""
+<style>
+#MainMenu, header, footer { visibility: hidden; height: 0; }
+.block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+iframe { display: block; }
+</style>
+""", unsafe_allow_html=True)
+
 HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 
