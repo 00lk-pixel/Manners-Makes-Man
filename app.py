@@ -72,10 +72,10 @@ def current_user():
 
 
 # 스플래시의 "Sign up with Google" 링크, 이메일 가입 폼, 프로필 저장 버튼은 모두
-# iframe 안에 있어서 target="_top"으로 최상단 페이지를 ?login=google /
-# ?signup=1&name=...&email=... / ?profile_save=1&profile=... 로 이동시킨다.
-# 그걸 여기서 감지해서 처리한다 - 실제 저장/구글 인증 콜백이 iframe이 아니라
-# 이 Streamlit 앱 자체 URL에서 일어나야 하기 때문.
+# iframe 안에 있어서 직접 최상단 페이지를 못 옮긴다 (아래 st.markdown으로 심는
+# postMessage 브리지가 대신 ?login=google / ?signup=1&fullname=...&email=... /
+# ?profile_save=1&profile=... 로 이동시킨다). 그걸 여기서 감지해서 처리한다 - 실제
+# 저장/구글 인증 콜백이 iframe이 아니라 이 Streamlit 앱 자체 URL에서 일어나야 하기 때문.
 if st.query_params.get("login") == "google":
     st.query_params.clear()
     if AUTH_CONFIGURED:
@@ -136,7 +136,7 @@ if user:
     auth_block = f"""
     <div class="splash-welcome">
       <p>{html_lib.escape(name)}님, 환영합니다 👋<br>{html_lib.escape(email)}</p>
-      <a href="?logout=1" target="_top">로그아웃</a>
+      <a href="#" onclick="event.preventDefault(); notifyParent({{type:'logout'}});">로그아웃</a>
     </div>
     <script>document.addEventListener('DOMContentLoaded', function(){{ showProfileScreen(); }});</script>
     """
@@ -146,5 +146,45 @@ if user:
         html,
         flags=re.DOTALL,
     )
+
+# Streamlit의 components.html iframe은 sandbox에 allow-top-navigation이 빠져 있어서
+# 그 iframe 안에서 target="_top"으로 최상단 페이지를 이동시키는 시도(폼 제출/앵커 클릭
+# 모두)가 브라우저에 의해 조용히 막힌다. 그래서 iframe 쪽(for_him_prototype.html)은
+# window.top.postMessage(...)로 "이런 일이 있었다"는 사실만 알리고, 실제 이동은 여기
+# 최상단 페이지 자신의 스크립트가 대신 수행한다 (자기 자신을 이동시키는 건 sandbox와
+# 무관하게 항상 허용됨). st.markdown(unsafe_allow_html=True)는 <script> 태그를 실행하지
+# 않으므로, innerHTML로 삽입돼도 실행되는 <img onerror=...> 트릭으로 최상단 페이지에
+# 진짜로 실행되는 스크립트를 심는다.
+st.markdown(
+    """
+    <img src="x" alt="" style="display:none" onerror="
+      (function(){
+        if (window.__mmmBridgeInstalled) return;
+        window.__mmmBridgeInstalled = true;
+        window.addEventListener('message', function(event) {
+          var data = event.data;
+          if (!data || data.__mmm !== true || !data.type) return;
+          var params = new URLSearchParams(window.location.search);
+          if (data.type === 'login_google') {
+            params.set('login', 'google');
+          } else if (data.type === 'signup') {
+            params.set('signup', '1');
+            params.set('fullname', data.fullname || '');
+            params.set('email', data.email || '');
+          } else if (data.type === 'profile_save') {
+            params.set('profile_save', '1');
+            params.set('profile', JSON.stringify(data.profile || {}));
+          } else if (data.type === 'logout') {
+            params.set('logout', '1');
+          } else {
+            return;
+          }
+          window.location.search = params.toString();
+        });
+      })();
+    ">
+    """,
+    unsafe_allow_html=True,
+)
 
 components.html(html, height=880, scrolling=False)
