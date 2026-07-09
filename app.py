@@ -30,4 +30,4 @@ iframe { display: block; }
 HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 
-components.html(html, height=800, scrolling=False)
+components.html(html, height=880, scrolling=False)

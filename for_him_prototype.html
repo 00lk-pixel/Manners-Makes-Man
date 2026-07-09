@@ -152,7 +152,7 @@
 
   /* ---------- splash ---------- */
   .splash {
-    min-height: 640px; background: var(--ink); color: var(--cream);
+    min-height: 720px; background: var(--ink); color: var(--cream);
     display: flex; flex-direction: column; justify-content: center;
     overflow: hidden; position: relative;
   }
@@ -174,17 +174,17 @@
   .splash-center { display: flex; flex-direction: column; align-items: center; gap: clamp(1.8rem, 5vw, 2.6rem); padding: 0 1.5rem; }
   .splash-logo { width: min(58vw, 460px); }
   .splash-logo .wordmark-text { fill: var(--cream); }
-  .splash-signup { padding: 1rem 2.6rem; font-size: 1rem; }
+  .splash-signup { padding: 0.6rem 1.7rem; font-size: 0.85rem; }
   .splash-auth { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
   .splash-divider { display: flex; align-items: center; gap: 0.8rem; color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .splash-divider::before, .splash-divider::after { content: ""; width: 2.5rem; height: 1px; background: rgba(255, 255, 255, 0.25); }
   .google-btn {
-    display: inline-flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1.5rem 0.75rem 1rem;
-    border-radius: 999px; background: var(--cream); color: #1F1F1F; font-weight: 600; font-size: 0.95rem;
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.1rem 0.5rem 0.8rem;
+    border-radius: 999px; background: var(--cream); color: #1F1F1F; font-weight: 600; font-size: 0.82rem;
     border: 1px solid rgba(0, 0, 0, 0.1); transition: transform .18s ease, box-shadow .18s ease;
   }
   .google-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
-  .google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .google-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
   .splash-note { font-size: 0.78rem; color: rgba(255, 255, 255, 0.4); }
 
   .wordmark { width: 100%; display: block; overflow: visible; }
