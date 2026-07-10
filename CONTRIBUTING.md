@@ -73,3 +73,21 @@ git push
 - **본 작업물의 현 상태**: `main` 브랜치 = 항상 컨펌 완료된 최신 상태
 - **누가 지금 뭘 하는지**: GitHub → Pull Requests 탭 (열려 있는 PR 목록)
 - **각자 로컬을 최신으로**: 하루 시작할 때 `git switch main && git pull origin main`
+
+## 실시간 미리보기 (Streamlit Cloud)
+
+브랜치에 push가 들어올 때마다 해당 브랜치의 앱이 1~2분 안에 자동 재배포된다.
+diff만 보지 말고, 아래 링크에서 실제 동작하는 화면으로 서로의 작업 상태를 확인하자.
+
+| 브랜치 | 용도 | 미리보기 URL |
+| --- | --- | --- |
+| `main` | 본 작업물 (컨펌 완료된 최신 상태) | (기존 배포 앱 URL) |
+| `BUNNY` | 담당: 경세 (컨트롤타워) | https://bunny.streamlit.app |
+| `KITTY` | 담당: 소담 | https://kitty.streamlit.app |
+| `PUPPY` | 담당: 서현 | https://puppy.streamlit.app |
+| `FAWN` | 담당: 아림 | https://fawn.streamlit.app |
+| `CALF` | 담당: 관용 | https://calf.streamlit.app |
+
+- URL 이름이 이미 선점되어 배포 시 다른 이름(예: `mmm-bunny`)을 썼다면 이 표를 고쳐줄 것.
+- 미리보기 앱은 접속이 며칠 없으면 잠든다 — "Zzz" 화면이 뜨면 깨우기 버튼 한 번이면 된다.
+- 각 앱의 가입 데이터(`data/signups.json`)는 앱마다 독립이고 재배포 시 초기화된다.
