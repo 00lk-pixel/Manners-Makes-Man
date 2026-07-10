@@ -73,7 +73,7 @@
   }
 
   header.top{
-    padding: calc(24px + env(safe-area-inset-top)) 0 34px;
+    padding: 30px 0 40px;
     background: linear-gradient(135deg, #E1804A 0%, var(--primary) 100%);
     color: #fff;
   }
@@ -106,6 +106,7 @@
   .section-title{
     display:flex;
     align-items:center;
+    line-height: 1;
     gap: 8px;
     font-size: 22px;
     font-weight: 700;
@@ -113,15 +114,10 @@
     margin: 0 0 4px;
   }
   .section-title .badge{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width: 24px; height:24px;
-    border-radius: 50%;
-    background: var(--primary-light);
     color: var(--primary);
-    font-size: 13px;
+    font-size: 20px;
     font-weight: 800;
+    line-height: 1;
     flex-shrink: 0;
   }
   .section-desc{
@@ -360,20 +356,16 @@
   }
   .tutorial-item__num{
     flex-shrink: 0;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    background: var(--primary-light);
     color: var(--primary);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 800;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    line-height: 1;
   }
   .tutorial-item__name{
     flex: 1;
     font-size: 15px;
     font-weight: 600;
+    line-height: 1;
     color: var(--ink);
   }
   .tutorial-item__caret{
@@ -476,29 +468,6 @@
     color: var(--sub);
     line-height: 1.65;
   }
-
-  .page-exit-btn{
-    position: fixed;
-    top: calc(14px + env(safe-area-inset-top));
-    right: calc(14px + env(safe-area-inset-right));
-    z-index: 200;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
-    font-size: 16px;
-    text-decoration: none;
-    cursor: pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-    transition: background .15s ease;
-    touch-action: manipulation;
-  }
-  .page-exit-btn:hover{ background: rgba(0, 0, 0, 0.45); }
   .featured-badge{
     display:inline-flex;
     align-items:center;
@@ -512,7 +481,6 @@
 </head>
 <body>
 
-<button class="page-exit-btn" id="pageExitBtn" type="button" aria-label="닫기">✕</button>
 
 <header class="top">
   <div class="container">
@@ -869,5 +837,7 @@
 })();
 </script>
 
+</body>
+</html>
 </body>
 </html>
