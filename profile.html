@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프로필 설정 | SODAM</title>
+<style>
+  :root, :root[data-theme="dark"], :root[data-theme="light"]{
+    --primary: #DC6A28;
+    --primary-rgb: 220, 106, 40;
+    --primary-dark: #AE5420;
+    --primary-light: #262626;
+    --primary-lighter: #1C1C1C;
+    --accent-on-tint: #DC6A28;
+    --ink: #F5F5F3;
+    --sub: rgba(245, 245, 243, 0.64);
+    --line: rgba(255, 255, 255, 0.16);
+    --bg: #000000;
+    --card: #131313;
+    --surface: rgba(255, 255, 255, 0.12);
+    --surface-solid: #2E2E2E;
+    --scan-border: #4A4A4A;
+    --savebar-bg: rgba(0, 0, 0, 0.92);
+    --danger: #DC6A28;
+    --radius: 16px;
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  @font-face{
+    font-family: 'GmarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face{
+    font-family: 'GmarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face{
+    font-family: 'GmarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:'GmarketSans', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container{
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* Header */
+  header.top{
+    padding: 30px 0 40px;
+    background: linear-gradient(135deg, #E1804A 0%, var(--primary) 100%);
+    color: #fff;
+    position: relative;
+  }
+  header.top h1{
+    margin: 8px 0 6px;
+    font-size: 34px;
+    font-weight: 800;
+  }
+  header.top p{
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.9;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  main{
+    padding: 36px 0 130px;
+  }
+
+  .main-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .grid-full{ grid-column: 1 / -1; }
+
+  section.card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .section-divider{
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 22px 0;
+  }
+
+  @media (max-width: 860px){
+    .container{ padding: 0 20px; }
+    .main-grid{ grid-template-columns: 1fr; }
+    header.top h1{ font-size: 24px; }
+    main{ padding: 24px 0 120px; }
+  }
+
+  .section-title{
+    display:flex;
+    align-items:baseline;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .section-title .badge{
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .section-desc{
+    font-size: 14px;
+    color: var(--sub);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+
+  label.field-label{
+    display:block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  /* Pill selector (gender / skin type) */
+  .pill-group{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .pill{
+    flex: 1;
+    min-width: 72px;
+    text-align:center;
+    padding: 11px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .pill:hover{ border-color: var(--primary); color: var(--primary); }
+  .pill.active{
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(var(--primary-rgb), 0.28);
+  }
+
+  .skin-type-desc{
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border-left: 3px solid var(--primary);
+    background: var(--surface-solid);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .skin-type-desc.show{ display: flex; }
+  .skin-type-desc-text{
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--sub);
+    line-height: 1.5;
+  }
+
+  input[type="number"], input[type="text"], select, textarea{
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    margin-bottom: 18px;
+  }
+  input::placeholder{ color: rgba(245, 245, 243, 0.4); }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus{
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
+  }
+  .field-group:last-child input, .field-group:last-child select{ margin-bottom: 0; }
+
+  /* Custom autocomplete (replaces native datalist so width/colors are controllable) */
+  .autocomplete-wrap{ position: relative; }
+  .select-field{ position: relative; }
+  .select-field input{ padding-right: 36px; }
+  .select-arrow{
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sub);
+    font-size: 20px;
+    pointer-events: none;
+  }
+  .autocomplete-list{
+    position: absolute;
+    top: calc(100% - 10px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--surface-solid);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20;
+    display: none;
+  }
+  .autocomplete-list.open{ display: block; }
+  .autocomplete-list li{
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .autocomplete-list li:hover,
+  .autocomplete-list li.active{
+    background: var(--primary-light);
+    color: var(--accent-on-tint);
+  }
+
+  /* Concern chips (multi-select checkboxes) */
+  .chip-group{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    padding: 9px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s ease;
+  }
+  .chip input{ display:none; }
+  .chip:hover{ border-color: var(--primary); }
+  .chip.active{
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--accent-on-tint);
+  }
+  .chip .dot{
+    width: 6px; height:6px;
+    border-radius:50%;
+    background: var(--line);
+  }
+  .chip.active .dot{ background: var(--primary); }
+
+  /* Product scan cards */
+  #productList{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 560px){
+    #productList{ grid-template-columns: 1fr; }
+  }
+
+  .product-card{
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    background: var(--primary-lighter);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .product-card.saved{
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.18);
+  }
+  .product-card__header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 10px;
+  }
+  .product-card__header .name{
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent-on-tint);
+  }
+  .product-card.saved .product-card__header .name::after{
+    content: ' ✓ 저장됨';
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .recognized-fields input:disabled,
+  .recognized-fields select:disabled{
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-remove{
+    background: none;
+    border: none;
+    color: var(--sub);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+  .btn-remove:hover{ background: var(--surface-solid); color: var(--primary); }
+
+  .scan-area{
+    background: var(--surface-solid);
+    border: 1.5px dashed var(--scan-border);
+    border-radius: 12px;
+    min-height: 150px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap: 10px;
+    padding: 16px;
+    text-align:center;
+    position: relative;
+    overflow: hidden;
+  }
+  .scan-area img.captured{
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+  .scan-icon{
+    width: 40px; height: 40px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 18px;
+  }
+  .scan-hint{
+    font-size: 12.5px;
+    color: var(--sub);
+    line-height:1.5;
+    margin-bottom: 8px;
+  }
+  .scan-actions{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content:center;
+  }
+  .btn-scan{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .btn-scan:hover{ background: var(--primary-dark); }
+  .btn-scan:active{ transform: scale(0.97); }
+  .btn-scan.secondary{
+    background: var(--surface-solid);
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+  }
+  .btn-scan.secondary:hover{ background: var(--primary-light); }
+
+  .recognized-info{
+    margin-top: 12px;
+    display:none;
+  }
+  .recognized-info.show{ display:block; }
+  .recognized-info .status{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent-on-tint);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .recognized-info .status .spinner{
+    width: 12px; height:12px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-light);
+    border-top-color: var(--primary);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .recognized-info .mini-label{
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--sub);
+    margin-bottom: 5px;
+    display:block;
+  }
+  .recognized-info input, .recognized-info select{
+    margin-bottom: 10px;
+    background: var(--surface-solid);
+  }
+  .recognized-info input:last-child{ margin-bottom: 0; }
+
+  /* Add product button */
+  #addProductBtn{
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1.5px dashed var(--primary);
+    background: var(--surface-solid);
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 6px;
+    transition: background .15s ease;
+  }
+  #addProductBtn:hover{ background: var(--primary-lighter); }
+
+  /* Footer save bar */
+  footer.save-bar{
+    position: fixed;
+    bottom: 0;
+    left:0; right:0;
+    width: 100%;
+    background: var(--savebar-bg);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--line);
+    padding: 14px 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 40;
+  }
+  .save-bar .container{
+    display:flex;
+    justify-content: flex-end;
+  }
+  #saveBtn{
+    width: 280px;
+    padding: 15px;
+    border-radius: 14px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+  }
+  #saveBtn:hover{ background: var(--primary-dark); }
+  #saveBtn:active{ transform: scale(0.98); }
+
+  @media (max-width: 860px){
+    #saveBtn{ width: 100%; }
+  }
+
+  .toast{
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #2E2E2E;
+    color: #fff;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 60;
+    white-space: nowrap;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Camera modal */
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(20,12,8,0.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background: #000;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  .modal-box video, .modal-box canvas{
+    width: 100%;
+    display:block;
+    max-height: 70vh;
+    background: #111;
+    object-fit: cover;
+  }
+  .modal-frame{
+    position:absolute;
+    inset: 16px;
+    border: 2px solid rgba(var(--primary-rgb), 0.9);
+    border-radius: 16px;
+    pointer-events:none;
+  }
+  .modal-topbar{
+    position:absolute;
+    top:0; left:0; right:0;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    padding: 14px 16px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
+    z-index: 2;
+  }
+  .modal-topbar button{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .modal-actions{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 24px;
+    padding: 18px;
+    background: #000;
+  }
+  .shutter-btn{
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--primary);
+    cursor: pointer;
+  }
+  .shutter-btn:active{ transform: scale(0.94); }
+  .modal-error{
+    color: #fff;
+    font-size: 13px;
+    text-align:center;
+    padding: 40px 20px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="container">
+    <h1>Profile</h1>
+    <p>나에게 맞는 스타일링 추천을 위해 기본 정보와 사용 중인 제품을 알려주세요.</p>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="main-grid">
+      <!-- 기본 정보 -->
+      <section class="card">
+        <div class="section-title"><span class="badge">1</span> 기본 정보</div>
+        <p class="section-desc">성별과 나이, 직업을 알려주시면 더 정확한 분석이 가능해요.</p>
+
+        <label class="field-label">성별</label>
+        <div class="pill-group" id="genderGroup" data-name="gender">
+          <div class="pill" data-value="female">여성</div>
+          <div class="pill" data-value="male">남성</div>
+          <div class="pill" data-value="none">선택 안 함</div>
+        </div>
+
+        <label class="field-label">나이</label>
+        <div class="pill-group" id="ageGroup" data-name="age">
+          <div class="pill" data-value="teens">10대</div>
+          <div class="pill" data-value="20s">20대</div>
+          <div class="pill" data-value="30s">30대</div>
+          <div class="pill" data-value="40plus">40대 이상</div>
+        </div>
+
+        <div class="field-group autocomplete-wrap">
+          <label class="field-label" for="occupation">직업</label>
+          <div class="select-field">
+            <input type="text" id="occupation" name="occupation" placeholder="예: 회사원" autocomplete="off">
+            <span class="select-arrow" aria-hidden="true">▾</span>
+          </div>
+          <ul class="autocomplete-list" id="occupationList"></ul>
+        </div>
+      </section>
+
+      <!-- 피부 타입 + 피부/메이크업 고민 -->
+      <section class="card">
+        <div class="section-title"><span class="badge">2</span> 피부 타입</div>
+        <p class="section-desc">평소 느끼는 본인의 피부 타입을 선택해주세요.</p>
+        <div class="pill-group" id="skinTypeGroup" data-name="skinType">
+          <div class="pill" data-value="dry" data-desc="피부에 유수분이 부족해 건조함과 당김을 느끼기 쉬워요. 보습 위주의 케어가 필요해요.">건성</div>
+          <div class="pill" data-value="oily" data-desc="피지 분비가 많아 번들거림과 넓은 모공이 고민되기 쉬워요. 유분 조절과 꼼꼼한 클렌징이 중요해요.">지성</div>
+          <div class="pill" data-value="combination" data-desc="T존은 유분이 많고 볼 부위는 건조한 편이에요. 부위별로 다른 케어를 챙겨주는 게 좋아요.">복합성</div>
+          <div class="pill" data-value="sensitive" data-desc="자극에 민감해 홍조나 트러블이 쉽게 올라와요. 순하고 진정 효과가 있는 제품이 잘 맞아요.">민감성</div>
+          <div class="pill" data-value="unknown" data-desc="피부타입을 모르겠다면, 사진 촬영 후 분석해보세요!">모름</div>
+        </div>
+        <div class="skin-type-desc" id="skinTypeDesc">
+          <p class="skin-type-desc-text" id="skinTypeDescText"></p>
+          <button class="btn-scan secondary" id="skinAnalyzeBtn" type="button" style="display:none;">📷 사진으로 분석하기</button>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="section-title"><span class="badge">3</span> 피부 · 메이크업 고민</div>
+        <p class="section-desc">해당되는 항목을 모두 선택해주세요. (복수 선택 가능)</p>
+        <div class="chip-group" id="concernGroup" data-name="concerns">
+          <label class="chip"><input type="checkbox" value="acne"><span class="dot"></span>여드름·트러블</label>
+          <label class="chip"><input type="checkbox" value="pores"><span class="dot"></span>블랙헤드·모공</label>
+          <label class="chip"><input type="checkbox" value="pigmentation"><span class="dot"></span>색소침착·기미</label>
+          <label class="chip"><input type="checkbox" value="wrinkle"><span class="dot"></span>주름·탄력</label>
+          <label class="chip"><input type="checkbox" value="redness"><span class="dot"></span>홍조·민감</label>
+          <label class="chip"><input type="checkbox" value="dryness"><span class="dot"></span>건조함</label>
+          <label class="chip"><input type="checkbox" value="oiliness"><span class="dot"></span>과다 유분</label>
+          <label class="chip"><input type="checkbox" value="darkcircle"><span class="dot"></span>다크서클</label>
+          <label class="chip"><input type="checkbox" value="tone"><span class="dot"></span>피부톤 불균일</label>
+          <label class="chip"><input type="checkbox" value="makeup_longevity"><span class="dot"></span>화장 지속력</label>
+        </div>
+      </section>
+
+      <!-- 제품 스캔 -->
+      <section class="card grid-full">
+        <div class="section-title"><span class="badge">4</span> 사용 중인 제품</div>
+        <p class="section-desc">카메라로 제품을 스캔하면 제품명과 브랜드를 자동으로 인식해요. 인식된 정보는 자유롭게 수정할 수 있어요.</p>
+
+        <div id="productList"></div>
+
+        <button id="addProductBtn" type="button">
+          <span style="font-size:16px;">＋</span> 제품 추가하기
+        </button>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="save-bar">
+  <div class="container">
+    <button id="saveBtn" type="button">프로필 저장하기</button>
+  </div>
+</footer>
+
+<!-- 카메라 모달 -->
+<div class="modal-overlay" id="cameraModal">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-topbar">
+      <button id="closeModalBtn" type="button">✕</button>
+    </div>
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <div class="modal-frame"></div>
+    <canvas id="captureCanvas" style="display:none;"></canvas>
+    <div class="modal-actions">
+      <button class="shutter-btn" id="captureBtn" type="button" aria-label="촬영"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<template id="productTemplate">
+  <div class="product-card" data-id="">
+    <div class="product-card__header">
+      <span class="name">제품</span>
+      <button class="btn-remove" type="button">삭제</button>
+    </div>
+    <div class="scan-area">
+      <div class="scan-empty">
+        <div class="scan-icon">📷</div>
+        <div class="scan-hint">제품 라벨이나 패키지를<br>카메라로 스캔하거나 직접 입력해보세요</div>
+        <div class="scan-actions">
+          <button class="btn-scan scan-trigger" type="button">카메라로 스캔하기</button>
+          <button class="btn-scan secondary manual-trigger" type="button">직접 입력하기</button>
+        </div>
+      </div>
+    </div>
+    <div class="recognized-info">
+      <div class="status"><span class="spinner"></span> AI가 제품 정보를 인식하고 있어요...</div>
+      <div class="recognized-fields" style="display:none;">
+        <label class="mini-label">제품명</label>
+        <input type="text" class="field-name" placeholder="제품명을 확인해주세요">
+        <label class="mini-label">브랜드</label>
+        <input type="text" class="field-brand" placeholder="브랜드명을 확인해주세요">
+        <label class="mini-label">카테고리</label>
+        <select class="field-category">
+          <option value="">카테고리 선택</option>
+          <option value="skincare">스킨케어</option>
+          <option value="suncare">선케어</option>
+          <option value="cleansing">클렌징</option>
+          <option value="hair">헤어</option>
+          <option value="color">색조</option>
+          <option value="shaving">쉐이빙</option>
+        </select>
+        <div class="scan-actions">
+          <button class="btn-scan secondary rescan-trigger" type="button">다시 스캔하기</button>
+          <button class="btn-scan save-trigger" type="button">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+  // ---------- Skin type description + photo-analysis button ----------
+  function updateSkinTypeDesc(pill){
+    if(!pill || !pill.dataset.desc) return;
+    var descBox = document.getElementById('skinTypeDesc');
+    var descText = document.getElementById('skinTypeDescText');
+    var analyzeBtn = document.getElementById('skinAnalyzeBtn');
+    if(!descBox || !descText) return;
+    descText.textContent = pill.dataset.desc;
+    descBox.classList.add('show');
+    if(analyzeBtn) analyzeBtn.style.display = (pill.dataset.value === 'unknown') ? 'inline-flex' : 'none';
+  }
+
+  // ---------- Pill single-select groups ----------
+  document.querySelectorAll('.pill-group').forEach(function(group){
+    group.addEventListener('click', function(e){
+      var pill = e.target.closest('.pill');
+      if(!pill) return;
+      group.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
+      pill.classList.add('active');
+      updateSkinTypeDesc(pill);
+    });
+  });
+
+  // ---------- Chip multi-select ----------
+  document.querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var input = chip.querySelector('input');
+      input.checked = !input.checked;
+      chip.classList.toggle('active', input.checked);
+    });
+  });
+
+  // ---------- Occupation autocomplete (custom, replaces native datalist) ----------
+  var occupationOptions = ['학생', '회사원', '자영업', '프리랜서', '전문직', '주부', '기타'];
+  var occupationInput = document.getElementById('occupation');
+  var occupationList = document.getElementById('occupationList');
+
+  function renderOccupationList(filterText){
+    var filtered = occupationOptions.filter(function(o){
+      return !filterText || o.indexOf(filterText) !== -1;
+    });
+    occupationList.innerHTML = filtered.map(function(o){
+      return '<li data-value="' + o + '">' + o + '</li>';
+    }).join('');
+    occupationList.classList.toggle('open', filtered.length > 0);
+  }
+
+  occupationInput.addEventListener('focus', function(){
+    renderOccupationList(occupationInput.value);
+  });
+  occupationInput.addEventListener('input', function(){
+    renderOccupationList(occupationInput.value);
+  });
+  occupationList.addEventListener('click', function(e){
+    var li = e.target.closest('li');
+    if(!li) return;
+    occupationInput.value = li.dataset.value;
+    occupationList.classList.remove('open');
+  });
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.autocomplete-wrap')) occupationList.classList.remove('open');
+  });
+
+  // ---------- Toast ----------
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200);
+  }
+
+  // ---------- Product cards ----------
+  var productList = document.getElementById('productList');
+  var productTemplate = document.getElementById('productTemplate');
+  var productCount = 0;
+
+  var mockRecognitions = [
+    { name: '수분 진정 토너', brand: '라운드랩', category: 'skincare' },
+    { name: '판테놀 크림', brand: '닥터지', category: 'skincare' },
+    { name: '비타민 세럼', brand: '이니스프리', category: 'skincare' },
+    { name: '약산성 클렌징폼', brand: '아이오페', category: 'cleansing' },
+    { name: '톤업 선크림 SPF50', brand: '에스트라', category: 'suncare' }
+  ];
+
+  function addProductCard(){
+    productCount++;
+    var frag = productTemplate.content.cloneNode(true);
+    var card = frag.querySelector('.product-card');
+    card.dataset.id = 'product-' + productCount;
+    card.querySelector('.name').textContent = '제품 ' + productCount;
+    productList.appendChild(frag);
+    return card;
+  }
+
+  function removeCard(card){
+    card.remove();
+  }
+
+  productList.addEventListener('click', function(e){
+    var removeBtn = e.target.closest('.btn-remove');
+    if(removeBtn){
+      var card = removeBtn.closest('.product-card');
+      removeCard(card);
+      return;
+    }
+    var scanBtn = e.target.closest('.scan-trigger, .rescan-trigger');
+    if(scanBtn){
+      var targetCard = scanBtn.closest('.product-card');
+      openCamera(targetCard);
+      return;
+    }
+    var manualBtn = e.target.closest('.manual-trigger');
+    if(manualBtn){
+      var manualCard = manualBtn.closest('.product-card');
+      enableManualEntry(manualCard);
+      return;
+    }
+    var saveBtn = e.target.closest('.save-trigger');
+    if(saveBtn){
+      var saveCard = saveBtn.closest('.product-card');
+      toggleSaveProduct(saveCard);
+    }
+  });
+
+  function resetSaveState(card){
+    card.classList.remove('saved');
+    card.querySelectorAll('.field-name, .field-brand, .field-category').forEach(function(f){
+      f.disabled = false;
+    });
+    var saveBtn = card.querySelector('.save-trigger');
+    if(saveBtn){
+      saveBtn.textContent = '저장';
+      saveBtn.classList.remove('secondary');
+    }
+  }
+
+  function toggleSaveProduct(card){
+    var saveBtn = card.querySelector('.save-trigger');
+    var fields = card.querySelectorAll('.field-name, .field-brand, .field-category');
+    if(!card.classList.contains('saved')){
+      fields.forEach(function(f){ f.disabled = true; });
+      card.classList.add('saved');
+      saveBtn.textContent = '수정하기';
+      saveBtn.classList.add('secondary');
+      showToast('제품 정보를 저장했어요.');
+    } else {
+      fields.forEach(function(f){ f.disabled = false; });
+      card.classList.remove('saved');
+      saveBtn.textContent = '저장';
+      saveBtn.classList.remove('secondary');
+    }
+  }
+
+  function enableManualEntry(card){
+    var scanArea = card.querySelector('.scan-area');
+    scanArea.innerHTML =
+      '<div class="scan-icon">✏️</div>' +
+      '<div class="scan-hint">제품 정보를 직접 입력하고 있어요</div>' +
+      '<button class="btn-scan secondary scan-trigger" type="button">카메라로 스캔하기</button>';
+
+    resetSaveState(card);
+    var infoBox = card.querySelector('.recognized-info');
+    var status = infoBox.querySelector('.status');
+    var fields = infoBox.querySelector('.recognized-fields');
+    infoBox.classList.add('show');
+    status.style.display = 'none';
+    fields.style.display = 'block';
+  }
+
+  document.getElementById('addProductBtn').addEventListener('click', function(){
+    var card = addProductCard();
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // Start with one product card by default
+  addProductCard();
+
+  // ---------- Camera modal ----------
+  var modal = document.getElementById('cameraModal');
+  var video = document.getElementById('cameraVideo');
+  var canvas = document.getElementById('captureCanvas');
+  var captureBtn = document.getElementById('captureBtn');
+  var closeModalBtn = document.getElementById('closeModalBtn');
+  var currentStream = null;
+  var activeCard = null;
+  var activeMode = 'product';
+
+  function openCamera(card, mode){
+    activeCard = card || null;
+    activeMode = mode || 'product';
+    modal.classList.add('open');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(function(stream){
+        currentStream = stream;
+        video.srcObject = stream;
+      })
+      .catch(function(err){
+        var box = document.getElementById('modalBox');
+        box.querySelector('.modal-error') || box.insertAdjacentHTML('beforeend',
+          '<div class="modal-error">카메라를 사용할 수 없어요.<br>브라우저의 카메라 권한을 확인해주세요.</div>');
+      });
+  }
+
+  function stopCamera(){
+    if(currentStream){
+      currentStream.getTracks().forEach(function(t){ t.stop(); });
+      currentStream = null;
+    }
+    video.srcObject = null;
+    var err = document.querySelector('.modal-error');
+    if(err) err.remove();
+  }
+
+  function closeModal(){
+    stopCamera();
+    modal.classList.remove('open');
+    activeCard = null;
+  }
+
+  closeModalBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e){
+    if(e.target === modal) closeModal();
+  });
+
+  captureBtn.addEventListener('click', function(){
+    if(!currentStream) return;
+    if(activeMode === 'skin'){
+      closeModal();
+      analyzeSkinType();
+      return;
+    }
+    if(!activeCard) return;
+    var w = video.videoWidth, h = video.videoHeight;
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, w, h);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    renderCapturedImage(activeCard, dataUrl);
+    var cardRef = activeCard;
+    closeModal();
+    recognizeProduct(cardRef);
+  });
+
+  document.getElementById('skinAnalyzeBtn').addEventListener('click', function(){
+    openCamera(null, 'skin');
+  });
+
+  function analyzeSkinType(){
+    showToast('사진을 분석하고 있어요...');
+    setTimeout(function(){
+      var types = ['dry', 'oily', 'combination', 'sensitive'];
+      var picked = types[Math.floor(Math.random() * types.length)];
+      var pillEl = document.querySelector('#skinTypeGroup .pill[data-value="' + picked + '"]');
+      if(!pillEl) return;
+      document.querySelectorAll('#skinTypeGroup .pill').forEach(function(p){ p.classList.remove('active'); });
+      pillEl.classList.add('active');
+      updateSkinTypeDesc(pillEl);
+      showToast('분석 결과 "' + pillEl.textContent + '" 타입에 가까워요!');
+    }, 1200);
+  }
+
+  function renderCapturedImage(card, dataUrl){
+    var scanArea = card.querySelector('.scan-area');
+    scanArea.innerHTML =
+      '<img class="captured" src="' + dataUrl + '" alt="스캔한 제품 이미지">' +
+      '<button class="btn-scan secondary rescan-trigger" type="button" style="margin-top:10px;">다시 스캔하기</button>';
+  }
+
+  // ---------- Mock recognition (placeholder for real OCR / product recognition API) ----------
+  function recognizeProduct(card){
+    resetSaveState(card);
+    var infoBox = card.querySelector('.recognized-info');
+    var status = infoBox.querySelector('.status');
+    var fields = infoBox.querySelector('.recognized-fields');
+    infoBox.classList.add('show');
+    status.style.display = 'flex';
+    fields.style.display = 'none';
+
+    setTimeout(function(){
+      var mock = mockRecognitions[Math.floor(Math.random() * mockRecognitions.length)];
+      infoBox.querySelector('.field-name').value = mock.name;
+      infoBox.querySelector('.field-brand').value = mock.brand;
+      infoBox.querySelector('.field-category').value = mock.category;
+
+      status.style.display = 'none';
+      fields.style.display = 'block';
+      showToast('제품 정보를 인식했어요. 필요하면 수정해주세요.');
+    }, 1200);
+  }
+
+  // ---------- Save profile ----------
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    var gender = document.querySelector('#genderGroup .pill.active');
+    var skinType = document.querySelector('#skinTypeGroup .pill.active');
+    var age = document.querySelector('#ageGroup .pill.active');
+    var occupation = document.getElementById('occupation').value;
+    var concerns = Array.from(document.querySelectorAll('#concernGroup input:checked')).map(function(c){ return c.value; });
+    var products = Array.from(document.querySelectorAll('.product-card')).map(function(card){
+      return {
+        name: card.querySelector('.field-name') ? card.querySelector('.field-name').value : '',
+        brand: card.querySelector('.field-brand') ? card.querySelector('.field-brand').value : '',
+        category: card.querySelector('.field-category') ? card.querySelector('.field-category').value : ''
+      };
+    });
+
+    var profile = {
+      gender: gender ? gender.dataset.value : null,
+      age: age ? age.dataset.value : null,
+      occupation: occupation || null,
+      skinType: skinType ? skinType.dataset.value : null,
+      concerns: concerns,
+      products: products
+    };
+
+    try{
+      localStorage.setItem('sodam_profile', JSON.stringify(profile));
+    }catch(e){}
+
+    showToast('프로필이 저장되었어요!');
+  });
+
+  // ---------- Restore saved profile ----------
+  (function restore(){
+    var raw = null;
+    try{ raw = localStorage.getItem('sodam_profile'); }catch(e){}
+    if(!raw) return;
+    var profile;
+    try{ profile = JSON.parse(raw); }catch(e){ return; }
+    if(!profile) return;
+
+    if(profile.gender){
+      var g = document.querySelector('#genderGroup .pill[data-value="' + profile.gender + '"]');
+      if(g) g.classList.add('active');
+    }
+    if(profile.skinType){
+      var s = document.querySelector('#skinTypeGroup .pill[data-value="' + profile.skinType + '"]');
+      if(s){
+        s.classList.add('active');
+        updateSkinTypeDesc(s);
+      }
+    }
+    if(profile.age){
+      var a = document.querySelector('#ageGroup .pill[data-value="' + profile.age + '"]');
+      if(a) a.classList.add('active');
+    }
+    if(profile.occupation) document.getElementById('occupation').value = profile.occupation;
+    if(profile.concerns && profile.concerns.length){
+      profile.concerns.forEach(function(v){
+        var input = document.querySelector('#concernGroup input[value="' + v + '"]');
+        if(input){ input.checked = true; input.closest('.chip').classList.add('active'); }
+      });
+    }
+  })();
+})();
+</script>
+
+</body>
+</html>
