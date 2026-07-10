@@ -183,9 +183,42 @@ st.html(
           window.location.search = params.toString();
         });
       })();
+
+      // components.html은 항상 고정 height의 iframe이라, 화면(스플래시/가입/프로필)마다
+      // 실제 콘텐츠 길이가 달라도 그 고정 높이를 넘는 부분은 잘려 보인다. 그래서 iframe
+      // 안쪽 문서의 실제 콘텐츠 높이를 재서 iframe 자신의 높이를 맞춰준다 - 그러면 내부
+      // 스크롤 없이도 항상 전체 내용이 보이고, 화면이 길어지면 브라우저의 진짜 페이지
+      // 스크롤로 이어서 볼 수 있다. sandbox에 allow-same-origin이 있어서 iframe.contentDocument
+      // 접근이 막히지 않는다.
+      (function(){
+        if (window.__mmmAutoHeightInstalled) return;
+        window.__mmmAutoHeightInstalled = true;
+        var attachedDoc = null;
+        var observer = null;
+        function sync(doc, iframe) {
+          var root = doc.documentElement;
+          var h = Math.max(root.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
+          if (h > 0) iframe.style.height = h + 'px';
+        }
+        function tick() {
+          var iframe = document.querySelector('iframe');
+          if (!iframe) return;
+          var doc;
+          try { doc = iframe.contentDocument; } catch (err) { return; }
+          if (!doc || !doc.documentElement) return;
+          if (doc !== attachedDoc) {
+            attachedDoc = doc;
+            if (observer) observer.disconnect();
+            observer = new ResizeObserver(function () { sync(doc, iframe); });
+            observer.observe(doc.documentElement);
+          }
+          sync(doc, iframe);
+        }
+        setInterval(tick, 300);
+      })();
     </script>
     """,
     unsafe_allow_javascript=True,
 )
 
-components.html(html, height=880, scrolling=False)
+components.html(html, height=880, scrolling=True)
