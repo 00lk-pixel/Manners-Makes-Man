@@ -51,48 +51,79 @@
   }
 
   *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html,body{ margin:0; padding:0; }
+  html,body{ margin:0; padding:0; background:#050505; }
   html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body{
     font-family:'GmarketSans', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif;
-    background: var(--bg);
     color: var(--ink);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
   button, input, select, textarea{ font-family: inherit; }
   button{ touch-action: manipulation; }
 
-  .container{
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 0 40px;
+  .app-shell{
+    width: 100%;
+    max-width: 428px;
+    min-height: 100vh;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 60px rgba(0,0,0,.5);
+    overflow-x: hidden;
+    position: relative;
   }
-  @media (max-width: 560px){
-    .container{ padding: 0 18px; }
+
+  .container{
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
   }
 
   header.top{
+    display: flex;
+    align-items: center;
+    min-height: 146px;
     padding: 30px 0 40px;
     background: linear-gradient(135deg, #E1804A 0%, var(--primary) 100%);
     color: #fff;
+    position: relative;
   }
   header.top h1{
     margin: 8px 0 6px;
     font-size: 34px;
     font-weight: 800;
+    line-height: 1.3;
   }
   header.top p{
     margin: 0;
-    font-size: 16px;
+    font-size: 11px;
     opacity: 0.9;
-    line-height: 1.6;
+    line-height: 1.5;
   }
+  .btn-close-screen{
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s ease;
+    z-index: 5;
+  }
+  .btn-close-screen:hover{ background: rgba(255,255,255,0.32); }
 
-  main{ padding: 36px 0 calc(64px + env(safe-area-inset-bottom)); }
-  @media (max-width: 560px){
-    main{ padding: 24px 0 calc(56px + env(safe-area-inset-bottom)); }
-  }
+  main{ padding: 24px 0 calc(110px + env(safe-area-inset-bottom)); }
 
   section.card{
     background: var(--card);
@@ -106,22 +137,22 @@
   .section-title{
     display:flex;
     align-items:center;
-    line-height: 1;
+    line-height: 1.25;
     gap: 8px;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--ink);
     margin: 0 0 4px;
   }
   .section-title .badge{
     color: var(--primary);
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 800;
     line-height: 1;
     flex-shrink: 0;
   }
   .section-desc{
-    font-size: 14px;
+    font-size: 11px;
     color: var(--sub);
     margin: 0 0 16px;
     line-height: 1.5;
@@ -130,7 +161,7 @@
   /* Situation cards */
   .situation-group{
     display:grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 14px;
   }
   .situation-card{
@@ -159,13 +190,9 @@
   }
   .situation-card.active .situation-name{ color: var(--accent-on-tint); }
   .situation-desc{
-    font-size: 14px;
+    font-size: 10px;
     color: var(--sub);
     line-height: 1.5;
-  }
-
-  @media (max-width: 560px){
-    .situation-group{ grid-template-columns: 1fr; }
   }
 
   /* Intensity slider */
@@ -291,15 +318,9 @@
 
   .tutorial-grid{
     display:grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
     gap: 14px;
     margin-top: 12px;
-  }
-  @media (max-width: 900px){
-    .tutorial-grid{ grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 560px){
-    .tutorial-grid{ grid-template-columns: 1fr; }
   }
   .step-card{
     border: 1.5px solid var(--line);
@@ -322,7 +343,7 @@
     margin-bottom: 6px;
   }
   .tutorial-col-desc{
-    font-size: 13px;
+    font-size: 12px;
     color: var(--sub);
     line-height: 1.5;
     margin: 0 0 10px;
@@ -379,7 +400,7 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height .2s ease;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--sub);
     line-height: 1.5;
   }
@@ -464,9 +485,9 @@
     margin-bottom: 12px;
   }
   .howto-modal__body{
-    font-size: 15px;
+    font-size: 14px;
     color: var(--sub);
-    line-height: 1.65;
+    line-height: 1.6;
   }
   .featured-badge{
     display:inline-flex;
@@ -477,15 +498,94 @@
     color: var(--accent-on-tint);
     margin-bottom: 8px;
   }
+
+  /* Finish button + completion popup */
+  footer.save-bar{
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 428px;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--line);
+    padding: 14px 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 40;
+  }
+  #finishBtn{
+    width: 100%;
+    padding: 15px;
+    border-radius: 14px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+  }
+  #finishBtn:hover{ background: var(--primary-dark); }
+  #finishBtn:active{ transform: scale(0.98); }
+
+  .finish-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .finish-overlay.open{ display: flex; }
+  .finish-modal{
+    width: 100%;
+    max-width: 360px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 32px 24px 24px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .finish-modal__title{
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .finish-modal__body{
+    font-size: 14px;
+    color: var(--sub);
+    line-height: 1.5;
+    margin: 0 0 22px;
+  }
+  .finish-modal__close{
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .finish-modal__close:hover{ background: var(--primary-dark); }
 </style>
 </head>
 <body>
 
+<div class="app-shell">
 
 <header class="top">
+  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="history.back()">✕</button>
   <div class="container">
     <h1>Styling</h1>
-    <p>오늘의 상황과 원하는 꾸밈 정도를 선택하면, 순서에 맞는 제품 스타일링을 알려드려요.</p>
+    <p>상황과 원하는 꾸밈 정도를 선택하면, 순서에 맞는 제품 스타일링을 알려드려요.</p>
   </div>
 </header>
 
@@ -575,12 +675,28 @@
   </div>
 </main>
 
+<footer class="save-bar" id="finishFooter" style="display:none;">
+  <div class="container">
+    <button id="finishBtn" type="button">Finish</button>
+  </div>
+</footer>
+
+</div>
+
 <div class="howto-overlay" id="howtoOverlay">
   <div class="howto-modal">
     <button class="howto-modal__close" id="howtoCloseBtn" type="button" aria-label="닫기">✕</button>
     <div class="howto-modal__eyebrow">How to use</div>
     <div class="howto-modal__title" id="howtoTitle"></div>
     <div class="howto-modal__body" id="howtoBody"></div>
+  </div>
+</div>
+
+<div class="finish-overlay" id="finishOverlay">
+  <div class="finish-modal">
+    <div class="finish-modal__title">Styling Complete.</div>
+    <p class="finish-modal__body">오늘도 당신답게.</p>
+    <button class="finish-modal__close" id="finishCloseBtn" type="button">닫기</button>
   </div>
 </div>
 
@@ -702,7 +818,7 @@
     '하드왁스': '손바닥에서 충분히 녹인 뒤 머리카락 전체에 발라 강한 고정력으로 스타일을 잡아주세요.'
   };
 
-  var state = { situation: null, level: 1, tipsOpen: false };
+  var state = { situation: null, level: null, tipsOpen: false };
 
   var situationGroup = document.getElementById('situationGroup');
   var intensitySection = document.getElementById('intensitySection');
@@ -721,6 +837,20 @@
   var howtoTitle = document.getElementById('howtoTitle');
   var howtoBody = document.getElementById('howtoBody');
   var howtoCloseBtn = document.getElementById('howtoCloseBtn');
+  var finishBtn = document.getElementById('finishBtn');
+  var finishOverlay = document.getElementById('finishOverlay');
+  var finishCloseBtn = document.getElementById('finishCloseBtn');
+  var finishFooter = document.getElementById('finishFooter');
+
+  finishBtn.addEventListener('click', function(){
+    finishOverlay.classList.add('open');
+  });
+  finishCloseBtn.addEventListener('click', function(){
+    finishOverlay.classList.remove('open');
+  });
+  finishOverlay.addEventListener('click', function(e){
+    if(e.target === finishOverlay) finishOverlay.classList.remove('open');
+  });
 
   situationGroup.addEventListener('click', function(e){
     var card = e.target.closest('.situation-card');
@@ -728,9 +858,10 @@
     situationGroup.querySelectorAll('.situation-card').forEach(function(c){ c.classList.remove('active'); });
     card.classList.add('active');
     state.situation = card.dataset.situation;
-    state.level = 1;
+    state.level = null;
     renderIntensity();
-    renderResult();
+    resultSection.style.display = 'none';
+    finishFooter.style.display = 'none';
   });
 
   sliderTrack.addEventListener('click', function(e){
@@ -803,7 +934,10 @@
     if(e.target === howtoOverlay) closeHowto();
   });
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape') closeHowto();
+    if(e.key === 'Escape'){
+      closeHowto();
+      finishOverlay.classList.remove('open');
+    }
   });
 
   function renderList(container, items){
@@ -817,6 +951,7 @@
     var cfg = DATA[state.situation];
     var levelData = cfg.levels[state.level];
     resultSection.style.display = 'block';
+    finishFooter.style.display = 'block';
     resultDesc.innerHTML = '<span class="result-highlight">' + cfg.name + ' · ' + LEVEL_LABELS[state.level] + '</span> 단계에 맞춰 완성하는 나만의 스타일링 순서예요.';
 
     renderList(skincareList, levelData.skincare);
@@ -836,8 +971,5 @@
   }
 })();
 </script>
-
-</body>
-</html>
 </body>
 </html>
