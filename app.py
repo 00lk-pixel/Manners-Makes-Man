@@ -134,6 +134,7 @@ iframe { display: block; }
 # 어떤 파일을 iframe에 로드할지 고르고, 아래에서 상단 네비게이션 바로 전환하게 한다.
 PAGES = {
     "home": ("HOME", "for_him_prototype.html"),
+    "mockup": ("MOCKUP", "mockup.html"),
     "profile": ("PROFILE", "profile.html"),
     "curation": ("STYLING", "curation.html"),
     "groom": ("GROOM AI", "groom_ai.html"),
@@ -144,6 +145,16 @@ if page_key not in PAGES:
 
 HTML_PATH = pathlib.Path(__file__).parent / PAGES[page_key][1]
 html = HTML_PATH.read_text(encoding="utf-8")
+
+# FAWN의 mockup.html은 <iframe src="for_him_prototype.html">로 프로토타입을 불러오는데,
+# components.html은 srcdoc 방식이라 상대 경로 파일을 서빙하지 못해 그대로는 빈 화면이
+# 된다. 프로토타입 HTML을 직접 읽어 srcdoc 속성으로 인라인해서 같은 화면을 보여준다.
+if page_key == "mockup":
+    proto = (pathlib.Path(__file__).parent / "for_him_prototype.html").read_text(encoding="utf-8")
+    html = html.replace(
+        '<iframe src="for_him_prototype.html" title="MMM prototype preview"></iframe>',
+        '<iframe srcdoc="%s" title="MMM prototype preview"></iframe>' % html_lib.escape(proto),
+    )
 
 user = current_user()
 if user and page_key == "home":
