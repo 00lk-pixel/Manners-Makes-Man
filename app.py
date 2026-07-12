@@ -122,14 +122,42 @@ st.markdown("""
 #MainMenu, header, footer { visibility: hidden; height: 0; }
 .block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
 iframe { display: block; }
+.mmm-nav { display: flex; gap: 22px; align-items: center; padding: 12px 28px; background: #111; }
+.mmm-nav a { color: #999; text-decoration: none; font-size: 13px; letter-spacing: 0.12em; }
+.mmm-nav a:hover { color: #fff; }
+.mmm-nav a.is-active { color: #fff; font-weight: 700; border-bottom: 2px solid #fff; padding-bottom: 2px; }
 </style>
 """, unsafe_allow_html=True)
 
-HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
+# KITTY 담당 화면들(프로필 설정 / 스타일링 큐레이션 / GROOM AI)은 독립 HTML 파일이라
+# 기존 랜딩(for_him_prototype.html)에서는 접근할 수 없다. ?page= 쿼리 파라미터로
+# 어떤 파일을 iframe에 로드할지 고르고, 아래에서 상단 네비게이션 바로 전환하게 한다.
+PAGES = {
+    "home": ("HOME", "for_him_prototype.html"),
+    "mockup": ("MOCKUP", "mockup.html"),
+    "profile": ("PROFILE", "profile.html"),
+    "curation": ("STYLING", "curation.html"),
+    "groom": ("GROOM AI", "groom_ai.html"),
+}
+page_key = st.query_params.get("page", "home")
+if page_key not in PAGES:
+    page_key = "home"
+
+HTML_PATH = pathlib.Path(__file__).parent / PAGES[page_key][1]
 html = HTML_PATH.read_text(encoding="utf-8")
 
+# FAWN의 mockup.html은 <iframe src="for_him_prototype.html">로 프로토타입을 불러오는데,
+# components.html은 srcdoc 방식이라 상대 경로 파일을 서빙하지 못해 그대로는 빈 화면이
+# 된다. 프로토타입 HTML을 직접 읽어 srcdoc 속성으로 인라인해서 같은 화면을 보여준다.
+if page_key == "mockup":
+    proto = (pathlib.Path(__file__).parent / "for_him_prototype.html").read_text(encoding="utf-8")
+    html = html.replace(
+        '<iframe src="for_him_prototype.html" title="MMM prototype preview"></iframe>',
+        '<iframe srcdoc="%s" title="MMM prototype preview"></iframe>' % html_lib.escape(proto),
+    )
+
 user = current_user()
-if user:
+if user and page_key == "home":
     name, email = user
     # 스플래시의 가입/로그인 버튼 자리에 로그아웃 링크를 넣고, 페이지가 뜨면 곧바로
     # 프로필 설정 화면으로 넘어가게 한다 (가입 완료 → 곧바로 프로필 설정 화면).
@@ -220,5 +248,17 @@ st.html(
     """,
     unsafe_allow_javascript=True,
 )
+
+# 상단 네비게이션 - 링크는 iframe 밖(최상단 페이지)에서 렌더링되므로 sandbox 제약
+# 없이 ?page= 쿼리 파라미터로 바로 이동해서 Streamlit이 해당 화면을 다시 그린다.
+nav_links = "".join(
+    '<a href="?page={key}" target="_self"{cls}>{label}</a>'.format(
+        key=key,
+        cls=' class="is-active"' if key == page_key else "",
+        label=label,
+    )
+    for key, (label, _) in PAGES.items()
+)
+st.markdown(f'<nav class="mmm-nav">{nav_links}</nav>', unsafe_allow_html=True)
 
 components.html(html, height=880, scrolling=True)
