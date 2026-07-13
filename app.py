@@ -71,17 +71,6 @@ def current_user():
     return None
 
 
-def profile_completed():
-    """현재 사용자가 프로필 입력까지 마쳤는지. 서비스 흐름이
-    '메인(스플래시) → 가입 → 프로필 입력 → 나머지 화면(큐레이션 등)'이라서,
-    나머지 화면으로 가는 네비게이션은 이게 True일 때만 노출한다."""
-    user = current_user()
-    if not user:
-        return False
-    email = user[1]
-    return any(u.get("email") == email and u.get("profile") for u in load_users())
-
-
 # 스플래시의 "Sign up with Google" 링크, 이메일 가입 폼, 프로필 저장 버튼은 모두
 # iframe 안에 있어서 직접 최상단 페이지를 못 옮긴다 (아래 st.markdown으로 심는
 # postMessage 브리지가 대신 ?login=google / ?signup=1&fullname=...&email=... /
@@ -119,8 +108,6 @@ if st.query_params.get("profile_save") == "1":
     user = current_user()
     if user:
         upsert_user(user[1], profile=profile)
-    # 프로필 입력 완료 → 이때부터 나머지 화면이 열리고, 첫 화면으로 큐레이션을 보여준다.
-    st.query_params["page"] = "curation"
     st.rerun()
 
 if st.query_params.get("logout") == "1":
@@ -326,17 +313,14 @@ st.html(
 
 # 상단 네비게이션 - 링크는 iframe 밖(최상단 페이지)에서 렌더링되므로 sandbox 제약
 # 없이 ?page= 쿼리 파라미터로 바로 이동해서 Streamlit이 해당 화면을 다시 그린다.
-# 서비스 흐름상 프로필 입력을 마치기 전에는 메인(스플래시)만 보여야 해서,
-# 네비게이션은 프로필 완료 후에만 노출한다.
-if profile_completed():
-    nav_links = "".join(
-        '<a href="?page={key}" target="_self"{cls}>{label}</a>'.format(
-            key=key,
-            cls=' class="is-active"' if key == page_key else "",
-            label=label,
-        )
-        for key, (label, _) in PAGES.items()
+nav_links = "".join(
+    '<a href="?page={key}" target="_self"{cls}>{label}</a>'.format(
+        key=key,
+        cls=' class="is-active"' if key == page_key else "",
+        label=label,
     )
-    st.markdown(f'<nav class="mmm-nav">{nav_links}</nav>', unsafe_allow_html=True)
+    for key, (label, _) in PAGES.items()
+)
+st.markdown(f'<nav class="mmm-nav">{nav_links}</nav>', unsafe_allow_html=True)
 
 components.html(html, height=880, scrolling=True)
