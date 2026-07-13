@@ -276,6 +276,9 @@ st.html(
           } else if (data.type === 'goto_page') {
             params.set('page', data.page || 'login');
             params.delete('screen');
+          } else if (data.type === 'guest_login') {
+            params.set('page', 'profile');
+            params.delete('screen');
           } else {
             return;
           }

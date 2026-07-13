@@ -63,9 +63,51 @@
     justify-content: center;
     min-height: 100vh;
   }
+  /* ---------- iPhone device mockup ---------- */
+  html{ height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  body{
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #6e6e73 0%, #4c4c50 55%, #3a3a3d 100%);
+    margin: 0;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-position{
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .phone-frame{
+    position: relative;
+    width: 500px; height: 880px;
+    padding: 16px;
+    background: #0b0b0c;
+    border-radius: 62px;
+    box-shadow: 0 50px 100px -20px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.06) inset;
+    transform: scale(min(calc(100vw / 540px), calc(100vh / 930px)));
+    transform-origin: center center;
+  }
+  .phone-home-indicator{
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.9);
+    z-index: 9999;
+  }
+  .phone-screen{
+    width: 100%; height: 100%;
+    border-radius: 46px;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none; -ms-overflow-style: none;
+    background: #000;
+  }
+  .phone-screen::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-screen > div, .phone-screen > section{ min-height: 100%; }
+
   .app-shell {
     width: 100%;
-    max-width: 428px;
+    max-width: 468px;
     min-height: 100vh;
     background: var(--paper);
     box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 60px rgba(0,0,0,.5);
@@ -471,10 +513,13 @@
 </head>
 <body>
 
+<div class="phone-position">
+<div class="phone-frame">
+<div class="phone-screen">
 <div class="app-shell">
 
 <section class="hero">
-  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="history.back()">✕</button>
+  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="window.location.href='home_prototype.html'">✕</button>
   <div class="hero-inner">
     <h1>How to Use</h1>
     <p>사용법부터 제품 추천까지 한 번에 알려드려요.</p>
@@ -802,6 +847,25 @@
   }
 
   renderTopCategories();
+
+  // curation.html에서 넘어올 때 ?cat=&sub= 쿼리로 전달된 카테고리를 선택된 상태로 표시
+  (function applyIncomingSelection(){
+    var params = new URLSearchParams(window.location.search);
+    var catId = params.get('cat');
+    var subId = params.get('sub');
+    if(!catId) return;
+    var cat = CATEGORIES.find(function(c){ return c.id === catId; });
+    if(!cat) return;
+    onTopClick(cat);
+    if(subId){
+      var sub = cat.sub.find(function(s){ return s.id === subId; });
+      if(sub) onSubClick(cat, sub);
+    }
+  })();
 </script>
+</div>
+<div class="phone-home-indicator"></div>
+</div>
+</div>
 </body>
 </html>
