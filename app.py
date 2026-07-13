@@ -140,7 +140,6 @@ PAGES = {
     "login": ("LOGIN", "for_him_prototype.html"),
     "home": ("HOME", "home_prototype.html"),
     "profile": ("PROFILE", "profile.html"),
-    "profile3": ("PROFILE 3", "profile 3.html"),
     "curation": ("STYLING", "curation.html"),
     "groom": ("GROOM AI", "groom_ai.html"),
 }
@@ -176,11 +175,13 @@ def build_login_html():
         lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
         html,
     )
-    # 비회원 로그인 버튼은 FAWN이 연결한 새 프로필 페이지(profile 3.html)로 보낸다.
-    # 나머지 window.location.href 이동은 전부 홈 화면의 해당 위치로 변환한다.
+    # 비회원 로그인 버튼(FAWN은 profile 3.html로 연결)도 프로필 페이지로 보낸다.
+    # profile 3.html은 profile.html과 동일한 복제본이라, 한쪽만 수정돼 화면이
+    # 갈라지는 일이 없도록 두 진입 경로(비회원 버튼/네비게이션) 모두 profile.html
+    # 하나만 서빙한다. 나머지 window.location.href 이동은 홈 화면 위치로 변환한다.
     html = html.replace(
         "window.location.href='profile%203.html'",
-        "mmmNotify({ type: 'goto_page', page: 'profile3' })",
+        "mmmNotify({ type: 'goto_page', page: 'profile' })",
     )
     html = re.sub(
         r"window\.location\.href='home_prototype\.html#([A-Za-z0-9_-]+)'",
