@@ -149,7 +149,13 @@ if page_key not in PAGES:
 
 
 def load_html(name):
-    return (pathlib.Path(__file__).parent / name).read_text(encoding="utf-8")
+    html = (pathlib.Path(__file__).parent / name).read_text(encoding="utf-8")
+    # Streamlit Cloud에서는 앱 페이지 자체가 클라우드 셸의 iframe 안에서 돌아가므로
+    # window.top은 (브리지 리스너가 없는) 셸을 가리켜 postMessage가 허공에 사라진다.
+    # 리스너는 앱 페이지(= components iframe의 parent)에 있으니 parent로 보내야
+    # 로컬/배포 양쪽에서 모두 닿는다. 화면 파일들의 notifyParent가 window.top을
+    # 쓰고 있어서 서빙 시점에 바꿔치기한다.
+    return html.replace("window.top.postMessage(", "window.parent.postMessage(")
 
 
 # 로그인 화면의 링크들은 home_prototype.html#... 상대 경로로 이동하는데, components.html
@@ -160,7 +166,7 @@ def load_html(name):
 GOTO_HOME_SCRIPT = """
 <script>
   function mmmNotify(payload) {
-    try { window.top.postMessage(Object.assign({ __mmm: true }, payload), '*'); } catch (err) {}
+    try { window.parent.postMessage(Object.assign({ __mmm: true }, payload), '*'); } catch (err) {}
   }
   function gotoHome(hash) { mmmNotify({ type: 'goto_home', hash: hash }); }
 </script>
