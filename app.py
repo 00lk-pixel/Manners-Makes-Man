@@ -93,6 +93,9 @@ if st.query_params.get("signup") == "1":
     if email:
         upsert_user(email, name=name)
     st.session_state["signed_up_user"] = {"name": name, "email": email}
+    # 가입 완료 → 곧바로 홈 화면의 프로필 설정 화면으로 이어지게 한다.
+    st.query_params["page"] = "home"
+    st.query_params["screen"] = "profile-screen"
     st.rerun()
 
 if st.query_params.get("profile_save") == "1":
@@ -122,23 +125,113 @@ st.markdown("""
 #MainMenu, header, footer { visibility: hidden; height: 0; }
 .block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
 iframe { display: block; }
+.mmm-nav { display: flex; gap: 22px; align-items: center; padding: 12px 28px; background: #111; }
+.mmm-nav a { color: #999; text-decoration: none; font-size: 13px; letter-spacing: 0.12em; }
+.mmm-nav a:hover { color: #fff; }
+.mmm-nav a.is-active { color: #fff; font-weight: 700; border-bottom: 2px solid #fff; padding-bottom: 2px; }
 </style>
 """, unsafe_allow_html=True)
 
-HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
-html = HTML_PATH.read_text(encoding="utf-8")
+# 팀원별 화면을 ?page= 쿼리 파라미터로 골라 iframe에 로드한다 (상단 네비게이션으로 전환).
+# FAWN이 프로토타입을 로그인 화면(for_him_prototype.html)과 홈 화면(home_prototype.html,
+# 히어로/갤러리/가입/프로필)으로 분리했고, KITTY 화면 3종도 여기 매핑된다.
+# (아이폰 목업은 FAWN이 로그인 페이지 자체에 통합해서 mockup.html은 삭제됨)
+PAGES = {
+    "login": ("LOGIN", "for_him_prototype.html"),
+    "home": ("HOME", "home_prototype.html"),
+    "profile": ("PROFILE", "profile.html"),
+    "curation": ("STYLING", "curation.html"),
+    "groom": ("GROOM AI", "groom_ai.html"),
+}
+page_key = st.query_params.get("page", "login")
+if page_key not in PAGES:
+    page_key = "login"
+
+
+def load_html(name):
+    html = (pathlib.Path(__file__).parent / name).read_text(encoding="utf-8")
+    # Streamlit Cloud에서는 앱 페이지 자체가 클라우드 셸의 iframe 안에서 돌아가므로
+    # window.top은 (브리지 리스너가 없는) 셸을 가리켜 postMessage가 허공에 사라진다.
+    # 리스너는 앱 페이지(= components iframe의 parent)에 있으니 parent로 보내야
+    # 로컬/배포 양쪽에서 모두 닿는다. 화면 파일들의 notifyParent가 window.top을
+    # 쓰고 있어서 서빙 시점에 바꿔치기한다.
+    return html.replace("window.top.postMessage(", "window.parent.postMessage(")
+
+
+# 로그인 화면의 링크들은 home_prototype.html#... 상대 경로로 이동하는데, components.html
+# iframe(srcdoc)은 상대 경로 파일을 서빙하지 못해 클릭이 전부 깨진다. 그래서 서빙 시점에
+# 그 링크들을 postMessage(goto_home)로 바꿔치기하고, 최상단 브리지가 ?page=home&screen=...
+# 으로 변환해 Streamlit이 홈 화면을 해당 위치로 열게 한다. notifyParent는 홈 파일에만
+# 있어서 로그인 화면에는 mmmNotify/gotoHome 헬퍼를 직접 주입한다.
+GOTO_HOME_SCRIPT = """
+<script>
+  function mmmNotify(payload) {
+    try { window.parent.postMessage(Object.assign({ __mmm: true }, payload), '*'); } catch (err) {}
+  }
+  function gotoHome(hash) { mmmNotify({ type: 'goto_home', hash: hash }); }
+</script>
+"""
+
+
+def build_login_html():
+    html = load_html("for_him_prototype.html")
+    html = html.replace("</head>", GOTO_HOME_SCRIPT + "</head>", 1)
+    html = re.sub(
+        r'href="home_prototype\.html#([A-Za-z0-9_-]+)"',
+        lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
+        html,
+    )
+    # 비회원 로그인 버튼(FAWN은 profile 3.html로 연결)도 프로필 페이지로 보낸다.
+    # profile 3.html은 profile.html과 동일한 복제본이라, 한쪽만 수정돼 화면이
+    # 갈라지는 일이 없도록 두 진입 경로(비회원 버튼/네비게이션) 모두 profile.html
+    # 하나만 서빙한다. 나머지 window.location.href 이동은 홈 화면 위치로 변환한다.
+    html = html.replace(
+        "window.location.href='profile%203.html'",
+        "mmmNotify({ type: 'goto_page', page: 'profile' })",
+    )
+    html = re.sub(
+        r"window\.location\.href='home_prototype\.html#([A-Za-z0-9_-]+)'",
+        lambda m: "gotoHome('%s')" % m.group(1),
+        html,
+    )
+    return html
+
+
+if page_key == "login":
+    html = build_login_html()
+else:
+    html = load_html(PAGES[page_key][1])
+
+# 로그인 화면에서 넘어올 때 홈의 어떤 화면(가입/프로필) 또는 앵커(#hero 등)를 열지
+# ?screen=으로 전달받는다. 홈 파일 자체의 location.hash 부트스트랩은 srcdoc iframe에선
+# 해시가 없어 동작하지 않으므로 같은 일을 하는 스크립트를 주입한다.
+if page_key == "home":
+    screen = st.query_params.get("screen", "")
+    if re.fullmatch(r"[A-Za-z0-9_-]+", screen or ""):
+        bootstrap = """
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var screen = '%s';
+    if (screen === 'signup-screen') { showSignup(); }
+    else if (screen === 'profile-screen') { showProfileScreen(); }
+    else { var el = document.getElementById(screen); if (el) el.scrollIntoView(); }
+  });
+</script>
+""" % screen
+        html = html.replace("</body>", bootstrap + "</body>", 1)
 
 user = current_user()
-if user:
+if user and page_key == "login":
     name, email = user
-    # 스플래시의 가입/로그인 버튼 자리에 로그아웃 링크를 넣고, 페이지가 뜨면 곧바로
-    # 프로필 설정 화면으로 넘어가게 한다 (가입 완료 → 곧바로 프로필 설정 화면).
+    # 스플래시의 가입/로그인 버튼 자리에 환영 문구 + 프로필/로그아웃 링크를 넣는다.
+    # (프로필 화면이 home_prototype.html로 분리되어 예전처럼 같은 문서 안에서
+    # showProfileScreen()을 바로 부를 수 없고, gotoHome으로 홈 화면을 연다.)
     auth_block = f"""
     <div class="splash-welcome">
       <p>{html_lib.escape(name)}님, 환영합니다 👋<br>{html_lib.escape(email)}</p>
-      <a href="#" onclick="event.preventDefault(); notifyParent({{type:'logout'}});">로그아웃</a>
+      <a href="#" onclick="event.preventDefault(); gotoHome('profile-screen');">프로필 설정</a> ·
+      <a href="#" onclick="event.preventDefault(); mmmNotify({{type:'logout'}});">로그아웃</a>
     </div>
-    <script>document.addEventListener('DOMContentLoaded', function(){{ showProfileScreen(); }});</script>
     """
     html = re.sub(
         r"<!--AUTH_BLOCK_START-->.*?<!--AUTH_BLOCK_END-->",
@@ -177,6 +270,15 @@ st.html(
             params.set('profile', JSON.stringify(data.profile || {}));
           } else if (data.type === 'logout') {
             params.set('logout', '1');
+          } else if (data.type === 'goto_home') {
+            params.set('page', 'home');
+            params.set('screen', data.hash || '');
+          } else if (data.type === 'goto_page') {
+            params.set('page', data.page || 'login');
+            params.delete('screen');
+          } else if (data.type === 'guest_login') {
+            params.set('page', 'profile');
+            params.delete('screen');
           } else {
             return;
           }
@@ -220,5 +322,17 @@ st.html(
     """,
     unsafe_allow_javascript=True,
 )
+
+# 상단 네비게이션 - 링크는 iframe 밖(최상단 페이지)에서 렌더링되므로 sandbox 제약
+# 없이 ?page= 쿼리 파라미터로 바로 이동해서 Streamlit이 해당 화면을 다시 그린다.
+nav_links = "".join(
+    '<a href="?page={key}" target="_self"{cls}>{label}</a>'.format(
+        key=key,
+        cls=' class="is-active"' if key == page_key else "",
+        label=label,
+    )
+    for key, (label, _) in PAGES.items()
+)
+st.markdown(f'<nav class="mmm-nav">{nav_links}</nav>', unsafe_allow_html=True)
 
 components.html(html, height=880, scrolling=True)
