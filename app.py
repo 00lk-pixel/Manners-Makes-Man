@@ -158,24 +158,74 @@ def load_html(name):
     return html.replace("window.top.postMessage(", "window.parent.postMessage(")
 
 
-# 로그인 화면의 링크들은 home_prototype.html#... 상대 경로로 이동하는데, components.html
-# iframe(srcdoc)은 상대 경로 파일을 서빙하지 못해 클릭이 전부 깨진다. 그래서 서빙 시점에
-# 그 링크들을 postMessage(goto_home)로 바꿔치기하고, 최상단 브리지가 ?page=home&screen=...
-# 으로 변환해 Streamlit이 홈 화면을 해당 위치로 열게 한다. notifyParent는 홈 파일에만
-# 있어서 로그인 화면에는 mmmNotify/gotoHome 헬퍼를 직접 주입한다.
-GOTO_HOME_SCRIPT = """
+# 화면 파일들은 서로 <a href="profile.html?reset=1">나 window.location.href='...'로
+# 이동하는데, components.html iframe(srcdoc)은 상대 경로 파일을 서빙하지 못해 클릭이
+# 전부 깨진다. 그래서 모든 화면에 이 헬퍼를 주입해서 (1) .html 앵커 클릭을 가로채고
+# (2) 서빙 시점에 바꿔치기된 window.location.href 이동(mmmGotoPage)을 받아
+# postMessage(goto_page/goto_home)로 알리면, 최상단 브리지가 ?page=... 로 변환해
+# Streamlit이 해당 화면을 다시 그린다.
+BRIDGE_HELPER_SCRIPT = """
 <script>
   function mmmNotify(payload) {
     try { window.parent.postMessage(Object.assign({ __mmm: true }, payload), '*'); } catch (err) {}
   }
   function gotoHome(hash) { mmmNotify({ type: 'goto_home', hash: hash }); }
+  var MMM_PAGE_KEYS = %s;
+  function mmmGotoPage(url) {
+    var hashSplit = String(url).split('#');
+    var parts = hashSplit[0].split('?');
+    var key = MMM_PAGE_KEYS[parts[0]];
+    if (key === 'home' && hashSplit[1]) { gotoHome(hashSplit[1]); return; }
+    if (key) { mmmNotify({ type: 'goto_page', page: key, query: parts[1] || '' }); return; }
+    window.location.href = url;
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('://') !== -1) return;
+    if (!MMM_PAGE_KEYS[href.split('#')[0].split('?')[0]]) return;
+    e.preventDefault();
+    mmmGotoPage(href);
+  }, true);
 </script>
-"""
+""" % json.dumps({file: key for key, (_, file) in PAGES.items()}, ensure_ascii=False)
+
+# window.location.href = '...' 형태의 페이지 이동을 통째로 mmmGotoPage(...)로 감싼다.
+# 우변이 'groom_ai.html?cat=' + encodeURIComponent(...) 같은 연결식이어도 식 전체를
+# 붙잡는다 (문장 끝 ; 또는 onclick 속성의 닫는 따옴표 직전까지). == 비교는 제외.
+NAV_ASSIGN_RE = re.compile(r"window\.location\.href\s*=(?!=)\s*((?:'[^']*'|[^;'\"\n])+)")
+
+# 화면 자체 쿼리(?reset=1, ?guest=1, ?cat=&sub=)는 srcdoc iframe에는 존재하지 않고
+# 최상단 Streamlit URL에 실려 온다. 여기 나열된 키만 iframe 안으로 다시 전달한다.
+IFRAME_QUERY_KEYS = ("guest", "reset", "cat", "sub")
+
+
+def bridge_relative_nav(html):
+    query = "&".join(
+        "%s=%s" % (key, st.query_params[key])
+        for key in IFRAME_QUERY_KEYS
+        if re.fullmatch(r"[A-Za-z0-9_-]+", st.query_params.get(key) or "")
+    )
+    helper = BRIDGE_HELPER_SCRIPT + (
+        "<script>window.__mmmQuery = %s;</script>" % json.dumps(query)
+    )
+    if "</head>" in html:
+        html = html.replace("</head>", helper + "</head>", 1)
+    else:
+        # home_prototype.html은 <head>/<body> 태그 없이 시작해서 문서 맨 앞에 넣는다.
+        html = helper + html
+    html = NAV_ASSIGN_RE.sub(lambda m: "mmmGotoPage(%s)" % m.group(1).rstrip(), html)
+    # 각 화면의 쿼리 읽기가 iframe에서도 동작하도록 주입된 __mmmQuery를 우선 사용
+    html = html.replace(
+        "new URLSearchParams(window.location.search)",
+        "new URLSearchParams(window.__mmmQuery || window.location.search)",
+    )
+    return html
 
 
 def build_login_html():
     html = load_html("for_him_prototype.html")
-    html = html.replace("</head>", GOTO_HOME_SCRIPT + "</head>", 1)
     html = re.sub(
         r'href="home_prototype\.html#([A-Za-z0-9_-]+)"',
         lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
@@ -201,6 +251,7 @@ if page_key == "login":
     html = build_login_html()
 else:
     html = load_html(PAGES[page_key][1])
+html = bridge_relative_nav(html)
 
 # 로그인 화면에서 넘어올 때 홈의 어떤 화면(가입/프로필) 또는 앵커(#hero 등)를 열지
 # ?screen=으로 전달받는다. 홈 파일 자체의 location.hash 부트스트랩은 srcdoc iframe에선
@@ -276,14 +327,17 @@ st.html(
           } else if (data.type === 'logout') {
             params.set('logout', '1');
           } else if (data.type === 'goto_home') {
+            ['screen', 'guest', 'reset', 'cat', 'sub'].forEach(function (k) { params.delete(k); });
             params.set('page', 'home');
             params.set('screen', data.hash || '');
           } else if (data.type === 'goto_page') {
+            ['screen', 'guest', 'reset', 'cat', 'sub'].forEach(function (k) { params.delete(k); });
             params.set('page', data.page || 'login');
-            params.delete('screen');
+            new URLSearchParams(data.query || '').forEach(function (v, k) { params.set(k, v); });
           } else if (data.type === 'guest_login') {
+            ['screen', 'reset', 'cat', 'sub'].forEach(function (k) { params.delete(k); });
             params.set('page', 'profile');
-            params.delete('screen');
+            params.set('guest', '1');
           } else {
             return;
           }
