@@ -724,6 +724,13 @@
           <span style="font-size:16px;">＋</span> 제품 추가하기
         </button>
       </section>
+
+      <!-- 내 루틴 -->
+      <section class="card grid-full">
+        <div class="section-title"><span class="badge">5</span> 나만의 루틴</div>
+        <p class="section-desc">나만의 스타일링 루틴이 이곳에 표시될 예정이에요.</p>
+        <div id="routineList"></div>
+      </section>
     </div>
   </div>
 </main>
@@ -883,18 +890,26 @@
     { name: '톤업 선크림 SPF50', brand: '에스트라', category: 'suncare' }
   ];
 
+  function renumberProducts(){
+    var cards = productList.querySelectorAll('.product-card');
+    cards.forEach(function(card, i){
+      card.querySelector('.name').textContent = '제품 ' + (i + 1);
+    });
+  }
+
   function addProductCard(){
     productCount++;
     var frag = productTemplate.content.cloneNode(true);
     var card = frag.querySelector('.product-card');
     card.dataset.id = 'product-' + productCount;
-    card.querySelector('.name').textContent = '제품 ' + productCount;
     productList.appendChild(frag);
+    renumberProducts();
     return card;
   }
 
   function removeCard(card){
     card.remove();
+    renumberProducts();
   }
 
   productList.addEventListener('click', function(e){
