@@ -134,11 +134,11 @@ iframe { display: block; }
 
 # 팀원별 화면을 ?page= 쿼리 파라미터로 골라 iframe에 로드한다 (상단 네비게이션으로 전환).
 # FAWN이 프로토타입을 로그인 화면(for_him_prototype.html)과 홈 화면(home_prototype.html,
-# 히어로/갤러리/가입/프로필)으로 분리했고, KITTY 화면 3종과 목업 페이지도 여기 매핑된다.
+# 히어로/갤러리/가입/프로필)으로 분리했고, KITTY 화면 3종도 여기 매핑된다.
+# (아이폰 목업은 FAWN이 로그인 페이지 자체에 통합해서 mockup.html은 삭제됨)
 PAGES = {
     "login": ("LOGIN", "for_him_prototype.html"),
     "home": ("HOME", "home_prototype.html"),
-    "mockup": ("MOCKUP", "mockup.html"),
     "profile": ("PROFILE", "profile.html"),
     "curation": ("STYLING", "curation.html"),
     "groom": ("GROOM AI", "groom_ai.html"),
@@ -175,9 +175,17 @@ def build_login_html():
         lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
         html,
     )
+    # 비회원 로그인 버튼(원래 home_prototype.html#hero로 이동)은 KITTY의 프로필
+    # 페이지(?page=profile)로 보낸다. 나머지 window.location.href 이동은 전부
+    # 홈 화면의 해당 위치로 변환한다.
     html = html.replace(
-        "window.location.href='home_prototype.html#signup-screen'",
-        "gotoHome('signup-screen')",
+        "window.location.href='home_prototype.html#hero'",
+        "mmmNotify({ type: 'goto_page', page: 'profile' })",
+    )
+    html = re.sub(
+        r"window\.location\.href='home_prototype\.html#([A-Za-z0-9_-]+)'",
+        lambda m: "gotoHome('%s')" % m.group(1),
+        html,
     )
     return html
 
@@ -204,15 +212,6 @@ if page_key == "home":
 </script>
 """ % screen
         html = html.replace("</body>", bootstrap + "</body>", 1)
-
-# FAWN의 mockup.html은 <iframe src="for_him_prototype.html">로 로그인 화면을 불러오는데,
-# srcdoc iframe 안에서는 상대 경로가 서빙되지 않아 빈 화면이 된다. 링크가 postMessage로
-# 재작성된 로그인 HTML을 srcdoc으로 인라인해서 목업 안에서도 실제 화면이 동작하게 한다.
-if page_key == "mockup":
-    html = html.replace(
-        '<iframe src="for_him_prototype.html" title="MMM prototype preview"></iframe>',
-        '<iframe srcdoc="%s" title="MMM prototype preview"></iframe>' % html_lib.escape(build_login_html()),
-    )
 
 user = current_user()
 if user and page_key == "login":
@@ -267,6 +266,9 @@ st.html(
           } else if (data.type === 'goto_home') {
             params.set('page', 'home');
             params.set('screen', data.hash || '');
+          } else if (data.type === 'goto_page') {
+            params.set('page', data.page || 'login');
+            params.delete('screen');
           } else {
             return;
           }
