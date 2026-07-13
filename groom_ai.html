@@ -788,7 +788,7 @@
 
     const source = document.getElementById('guideVideoSrc');
     const video = document.getElementById('guideVideo');
-    source.src = `assets/videos/${sub.video || sub.id}.mp4`;
+    source.src = `/app/static/videos/${sub.video || sub.id}.mp4`;
     video.load();
 
     renderUsageSteps(sub.steps || []);
