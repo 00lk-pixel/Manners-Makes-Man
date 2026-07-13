@@ -140,6 +140,7 @@ PAGES = {
     "login": ("LOGIN", "for_him_prototype.html"),
     "home": ("HOME", "home_prototype.html"),
     "profile": ("PROFILE", "profile.html"),
+    "profile3": ("PROFILE 3", "profile 3.html"),
     "curation": ("STYLING", "curation.html"),
     "groom": ("GROOM AI", "groom_ai.html"),
 }
@@ -175,12 +176,11 @@ def build_login_html():
         lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
         html,
     )
-    # 비회원 로그인 버튼(원래 home_prototype.html#hero로 이동)은 KITTY의 프로필
-    # 페이지(?page=profile)로 보낸다. 나머지 window.location.href 이동은 전부
-    # 홈 화면의 해당 위치로 변환한다.
+    # 비회원 로그인 버튼은 FAWN이 연결한 새 프로필 페이지(profile 3.html)로 보낸다.
+    # 나머지 window.location.href 이동은 전부 홈 화면의 해당 위치로 변환한다.
     html = html.replace(
-        "window.location.href='home_prototype.html#hero'",
-        "mmmNotify({ type: 'goto_page', page: 'profile' })",
+        "window.location.href='profile%203.html'",
+        "mmmNotify({ type: 'goto_page', page: 'profile3' })",
     )
     html = re.sub(
         r"window\.location\.href='home_prototype\.html#([A-Za-z0-9_-]+)'",
