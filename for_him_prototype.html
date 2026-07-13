@@ -1,6 +1,9 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
 <title>MMM — Makeup maketh man</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-
 <style>
   :root {
     color-scheme: light;
@@ -287,7 +290,100 @@
   .hero-inner { padding-bottom: 1rem; }
   .header-actions .btn { display: none; }
 </style>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 48px 24px;
+    background: #FFFFFF;
+  }
 
+  .stage {
+    position: relative;
+  }
+
+  /* iPhone frame */
+  .iphone {
+    position: relative;
+    width: 470px;
+    height: 932px;
+    padding: 16px;
+    border-radius: 64px;
+    background: linear-gradient(160deg, #2b2b2d 0%, #0d0d0e 55%, #2b2b2d 100%);
+    box-shadow:
+      0 0 0 1.5px rgba(255, 255, 255, 0.06) inset,
+      0 50px 100px -20px rgba(0, 0, 0, 0.4),
+      0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  }
+
+  /* side buttons */
+  .iphone::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: 230px;
+    width: 3px;
+    height: 37px;
+    background: #17171a;
+    border-radius: 2px 0 0 2px;
+  }
+  .iphone::after {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: 298px;
+    width: 3px;
+    height: 71px;
+    background: #17171a;
+    border-radius: 2px 0 0 2px;
+    box-shadow: 0 90px 0 0 #17171a;
+  }
+  .power-btn {
+    position: absolute;
+    right: -3px;
+    top: 252px;
+    width: 3px;
+    height: 103px;
+    background: #17171a;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 50px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+  /* caption */
+  .caption {
+    text-align: center;
+    margin-top: 28px;
+    font-family: -apple-system, "Pretendard", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: rgba(14, 14, 14, 0.5);
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="iphone">
+      <span class="power-btn"></span>
+      <div class="screen">
 <div class="app-shell">
 <header class="site-header">
   <div class="header-inner">
@@ -362,6 +458,10 @@
 </section>
 
 </div>
+      </div>
+    </div>
+    <div class="caption">MMM — Makeup maketh man</div>
+  </div>
 
 <script src="https://accounts.google.com/gsi/client"></script>
 <script>
@@ -423,3 +523,5 @@
     }
   }
 </script>
+</body>
+</html>
