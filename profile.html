@@ -1243,8 +1243,9 @@
   // ---------- Restore saved profile ----------
   (function restore(){
     var params = new URLSearchParams(window.location.search);
-    if(params.get('guest') === '1'){
+    if(params.get('guest') === '1' || params.get('reset') === '1'){
       try{ localStorage.removeItem('sodam_profile'); }catch(e){}
+      try{ localStorage.removeItem('sodam_curation_routine'); }catch(e){}
       return;
     }
 
