@@ -64,10 +64,51 @@
   }
   button, input, select, textarea{ font-family: inherit; }
   button{ touch-action: manipulation; }
+  /* ---------- iPhone device mockup ---------- */
+  html{ height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  body{
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #6e6e73 0%, #4c4c50 55%, #3a3a3d 100%);
+    margin: 0;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-position{
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .phone-frame{
+    position: relative;
+    width: 500px; height: 880px;
+    padding: 16px;
+    background: #0b0b0c;
+    border-radius: 62px;
+    box-shadow: 0 50px 100px -20px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.06) inset;
+    transform: scale(min(calc(100vw / 540px), calc(100vh / 930px)));
+    transform-origin: center center;
+  }
+  .phone-home-indicator{
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.9);
+    z-index: 9999;
+  }
+  .phone-screen{
+    width: 100%; height: 100%;
+    border-radius: 46px;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none; -ms-overflow-style: none;
+    background: #000;
+  }
+  .phone-screen::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-screen > div, .phone-screen > section{ min-height: 100%; }
 
   .app-shell{
     width: 100%;
-    max-width: 428px;
+    max-width: 468px;
     min-height: 100vh;
     background: var(--bg);
     box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 60px rgba(0,0,0,.5);
@@ -520,9 +561,8 @@
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 428px;
+    max-width: 468px;
     background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(6px);
     border-top: 1px solid var(--line);
     padding: 14px 0;
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
@@ -622,10 +662,13 @@
 </head>
 <body>
 
+<div class="phone-position">
+<div class="phone-frame">
+<div class="phone-screen">
 <div class="app-shell">
 
 <header class="top">
-  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="history.back()">✕</button>
+  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="window.location.href='home_prototype.html'">✕</button>
   <div class="container">
     <h1>Styling</h1>
     <p>상황과 원하는 꾸밈 정도를 선택하면, 순서에 맞는 제품 스타일링을 알려드려요.</p>
@@ -902,7 +945,44 @@
     '하드왁스': '손바닥에서 충분히 녹인 뒤 머리카락 전체에 발라 강한 고정력으로 스타일을 잡아주세요.'
   };
 
+  // 큐레이션 제품명 -> groom_ai.html의 상위/하위 카테고리 id 매핑
+  var GROOM_CATEGORY_MAP = {
+    '토너': { cat: 'skincare', sub: 'toner' },
+    '세럼': { cat: 'skincare', sub: 'ampoule' },
+    '수분크림': { cat: 'skincare', sub: 'lotion' },
+    '이멀전': { cat: 'skincare', sub: 'lotion' },
+    '선크림': { cat: 'sun', sub: 'sun-all' },
+    '톤업크림': { cat: 'sun', sub: 'sun-all' },
+    '무색 립밤': { cat: 'makeup', sub: 'lip' },
+    '발색 립밤': { cat: 'makeup', sub: 'lip' },
+    '틴티드 립밤': { cat: 'makeup', sub: 'lip' },
+    '틴티드 로션': { cat: 'makeup', sub: 'cover-lotion-bb' },
+    '브로우': { cat: 'makeup', sub: 'eyebrow' },
+    '파운데이션/쿠션': { cat: 'makeup', sub: 'stick-foundation' },
+    '쿠션/파운데이션': { cat: 'makeup', sub: 'stick-foundation' },
+    '코 쉐딩': { cat: 'makeup', sub: 'shading' },
+    '파우더': { cat: 'makeup', sub: 'powder' },
+    '프라이머/베이스': { cat: 'makeup', sub: 'primer' },
+    '컨실러': { cat: 'makeup', sub: 'concealer' },
+    '헤어 토닉': { cat: 'hair', sub: 'wax-spray' },
+    '헤어 에센스': { cat: 'hair', sub: 'wax-spray' },
+    '소프트왁스': { cat: 'hair', sub: 'wax-spray' },
+    '컬크림': { cat: 'hair', sub: 'wax-spray' },
+    '소프트 헤어 스프레이': { cat: 'hair', sub: 'wax-spray' },
+    '헤어 토너': { cat: 'hair', sub: 'wax-spray' },
+    '왁스': { cat: 'hair', sub: 'wax-spray' },
+    '하드 헤어 스프레이': { cat: 'hair', sub: 'wax-spray' },
+    '하드왁스': { cat: 'hair', sub: 'wax-spray' }
+  };
+
   var state = { situation: null, level: null, tipsOpen: false };
+  var STATE_KEY = 'sodam_curation_state';
+
+  function saveState(){
+    try{
+      localStorage.setItem(STATE_KEY, JSON.stringify({ situation: state.situation, level: state.level }));
+    }catch(e){}
+  }
 
   var situationGroup = document.getElementById('situationGroup');
   var intensitySection = document.getElementById('intensitySection');
@@ -921,6 +1001,7 @@
   var howtoTitle = document.getElementById('howtoTitle');
   var howtoBody = document.getElementById('howtoBody');
   var howtoCloseBtn = document.getElementById('howtoCloseBtn');
+  var howtoMoreBtn = document.getElementById('howtoMoreBtn');
   var finishBtn = document.getElementById('finishBtn');
   var finishOverlay = document.getElementById('finishOverlay');
   var finishCloseBtn = document.getElementById('finishCloseBtn');
@@ -934,8 +1015,27 @@
     finishOverlay.classList.remove('open');
   });
   finishSaveBtn.addEventListener('click', function(){
+    saveRoutine();
     fireConfetti();
   });
+
+  var ROUTINE_KEY = 'sodam_curation_routine';
+
+  function saveRoutine(){
+    var cfg = DATA[state.situation];
+    var levelData = cfg.levels[state.level];
+    var routine = {
+      situationName: cfg.name,
+      levelLabel: LEVEL_LABELS[state.level],
+      skincare: levelData.skincare,
+      suncare: levelData.suncare,
+      color: levelData.color,
+      hair: levelData.hair
+    };
+    try{
+      localStorage.setItem(ROUTINE_KEY, JSON.stringify(routine));
+    }catch(e){}
+  }
 
   // ---------- Confetti burst ----------
   var confettiCanvas = document.getElementById('confettiCanvas');
@@ -1017,6 +1117,7 @@
     renderIntensity();
     resultSection.style.display = 'none';
     finishFooter.style.display = 'none';
+    saveState();
   });
 
   sliderTrack.addEventListener('click', function(e){
@@ -1025,6 +1126,7 @@
     state.level = parseInt(dot.dataset.level, 10);
     renderIntensity();
     renderResult();
+    saveState();
   });
 
   toggleInfoBtn.addEventListener('click', function(){
@@ -1074,7 +1176,10 @@
     return li;
   }
 
+  var currentHowtoName = null;
+
   function openHowto(name){
+    currentHowtoName = name;
     howtoTitle.textContent = name;
     howtoBody.textContent = HOWTO[name] || '제품 패키지에 표기된 사용법을 참고해 적당량을 사용해주세요.';
     howtoOverlay.classList.add('open');
@@ -1087,6 +1192,14 @@
   howtoCloseBtn.addEventListener('click', closeHowto);
   howtoOverlay.addEventListener('click', function(e){
     if(e.target === howtoOverlay) closeHowto();
+  });
+  howtoMoreBtn.addEventListener('click', function(){
+    var match = GROOM_CATEGORY_MAP[currentHowtoName];
+    if(match){
+      window.location.href = 'groom_ai.html?cat=' + encodeURIComponent(match.cat) + '&sub=' + encodeURIComponent(match.sub);
+    } else {
+      window.location.href = 'groom_ai.html';
+    }
   });
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape'){
@@ -1124,7 +1237,39 @@
       hairList.parentElement.insertBefore(badge, hairList);
     }
   }
+
+  function restoreState(){
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('reset') === '1'){
+      try{ localStorage.removeItem(STATE_KEY); }catch(e){}
+      return;
+    }
+
+    var saved;
+    try{ saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); }catch(e){ return; }
+    if(!saved || !saved.situation || !DATA[saved.situation]) return;
+
+    state.situation = saved.situation;
+    var card = situationGroup.querySelector('.situation-card[data-situation="' + saved.situation + '"]');
+    if(card){
+      situationGroup.querySelectorAll('.situation-card').forEach(function(c){ c.classList.remove('active'); });
+      card.classList.add('active');
+    }
+    renderIntensity();
+
+    if(saved.level === 0 || saved.level === 1 || saved.level === 2){
+      state.level = saved.level;
+      renderIntensity();
+      renderResult();
+    }
+  }
+
+  restoreState();
 })();
 </script>
+</div>
+<div class="phone-home-indicator"></div>
+</div>
+</div>
 </body>
 </html>

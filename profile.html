@@ -58,10 +58,54 @@
     justify-content: center;
     min-height: 100vh;
   }
+  /* ---------- iPhone device mockup ---------- */
+  html{ height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  body{
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #6e6e73 0%, #4c4c50 55%, #3a3a3d 100%);
+    margin: 0;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-position{
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .phone-frame{
+    position: relative;
+    width: 500px; height: 880px;
+    padding: 16px;
+    background: #0b0b0c;
+    border-radius: 62px;
+    box-shadow: 0 50px 100px -20px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.06) inset;
+    transform: scale(min(calc(100vw / 540px), calc(100vh / 930px)));
+    transform-origin: center center;
+  }
+  .phone-home-indicator{
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.9);
+    z-index: 9999;
+  }
+  .phone-screen{
+    width: 100%; height: 100%;
+    border-radius: 46px;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none; -ms-overflow-style: none;
+    background: #000;
+  }
+  .phone-screen::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+  .phone-screen > div, .phone-screen > section{ min-height: 100%; }
+  /* toast/modal are small fixed-position UI, not full screens — they shouldn't
+     inherit the min-height:100% meant for the main app-shell */
+  .phone-screen > .toast, .phone-screen > .modal-overlay{ min-height: 0; }
 
   .app-shell{
     width: 100%;
-    max-width: 428px;
+    max-width: 468px;
     min-height: 100vh;
     background: var(--bg);
     box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 60px rgba(0,0,0,.5);
@@ -328,6 +372,51 @@
   }
   .chip.active .dot{ background: var(--primary); }
 
+  /* My routine (curation.html에서 저장한 스타일링 루틴) */
+  .routine-summary{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-on-tint);
+    background: var(--primary-light);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .routine-groups{
+    display:flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .routine-group__label{
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+  .routine-group__items{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .routine-tag{
+    display:inline-flex;
+    align-items:center;
+    padding: 7px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+  }
+  .routine-empty{
+    font-size: 13px;
+    color: var(--sub);
+  }
+
   /* Product scan cards */
   #productList{
     display:grid;
@@ -508,9 +597,8 @@
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 428px;
+    max-width: 468px;
     background: var(--savebar-bg);
-    backdrop-filter: blur(6px);
     border-top: 1px solid var(--line);
     padding: 14px 0;
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
@@ -637,10 +725,13 @@
 </head>
 <body>
 
+<div class="phone-position">
+<div class="phone-frame">
+<div class="phone-screen">
 <div class="app-shell">
 
 <header class="top">
-  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="history.back()">✕</button>
+  <button class="btn-close-screen" type="button" aria-label="닫기" onclick="window.location.href='home_prototype.html'">✕</button>
   <div class="container">
     <h1>Profile</h1>
     <p>나에게 맞는 스타일링 추천을 위해 기본 정보와 사용 중인 제품을 알려주세요.</p>
@@ -1151,6 +1242,12 @@
 
   // ---------- Restore saved profile ----------
   (function restore(){
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('guest') === '1'){
+      try{ localStorage.removeItem('sodam_profile'); }catch(e){}
+      return;
+    }
+
     var raw = null;
     try{ raw = localStorage.getItem('sodam_profile'); }catch(e){}
     if(!raw) return;
@@ -1181,8 +1278,49 @@
       });
     }
   })();
+
+  // ---------- Render saved styling routine (curation.html의 "3 메이크업 큐레이션" 저장 결과) ----------
+  (function renderRoutine(){
+    var routineList = document.getElementById('routineList');
+    var raw = null;
+    try{ raw = localStorage.getItem('sodam_curation_routine'); }catch(e){}
+    var routine;
+    try{ routine = raw ? JSON.parse(raw) : null; }catch(e){ routine = null; }
+
+    if(!routine){
+      routineList.innerHTML = '<p class="routine-empty">아직 저장된 루틴이 없어요. Styling에서 큐레이션을 완료하고 저장해보세요.</p>';
+      return;
+    }
+
+    var groups = [
+      { label: '🧴 스킨케어', items: routine.skincare },
+      { label: '🌤️ 선케어', items: routine.suncare },
+      { label: '💄 색조', items: routine.color },
+      { label: '💇 헤어', items: routine.hair }
+    ];
+
+    var html = '<div class="routine-summary">' + routine.situationName + ' · ' + routine.levelLabel + '</div>';
+    html += '<div class="routine-groups">';
+    groups.forEach(function(g){
+      if(!g.items || !g.items.length) return;
+      html += '<div class="routine-group">';
+      html += '<div class="routine-group__label">' + g.label + '</div>';
+      html += '<div class="routine-group__items">';
+      g.items.forEach(function(name){
+        html += '<span class="routine-tag">' + name + '</span>';
+      });
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    routineList.innerHTML = html;
+  })();
 })();
 </script>
 
+</div>
+<div class="phone-home-indicator"></div>
+</div>
+</div>
 </body>
 </html>
