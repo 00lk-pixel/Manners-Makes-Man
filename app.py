@@ -218,7 +218,12 @@ if page_key == "home":
   });
 </script>
 """ % screen
-        html = html.replace("</body>", bootstrap + "</body>", 1)
+        # home_prototype.html에는 </body> 닫는 태그가 없어서 replace가 조용히 무시된다.
+        # (가입 직후 프로필 화면 대신 홈 상단이 열리던 원인) 없으면 문서 끝에 덧붙인다.
+        if "</body>" in html:
+            html = html.replace("</body>", bootstrap + "</body>", 1)
+        else:
+            html += bootstrap
 
 user = current_user()
 if user and page_key == "login":
