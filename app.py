@@ -28,6 +28,7 @@ AUTH_CONFIGURED = "auth" in st.secrets
 MOCK_GOOGLE_EMAIL = "mock-google-user@local"
 st.session_state.setdefault("mock_logged_in", False)
 st.session_state.setdefault("signed_up_user", None)
+st.session_state.setdefault("guest_mode", False)
 
 # 가입/로그인/프로필 정보를 담는 사용자 명단 - 지금은 실제 DB가 없어서 가벼운
 # JSON 파일로 대체한다 (Streamlit Cloud가 재배포/재시작되면 파일이 초기화될 수
@@ -113,6 +114,16 @@ if st.query_params.get("logout") == "1":
         st.logout()
     st.session_state["mock_logged_in"] = False
     st.session_state["signed_up_user"] = None
+    st.session_state["guest_mode"] = False
+    st.rerun()
+
+# 스플래시의 "비회원으로 로그인하기" 버튼도 iframe 안에 있어서 직접 다른 정적
+# HTML(profile 3.html)로 페이지를 못 옮긴다 - 위 로그인/가입 버튼들과 같은 이유로
+# postMessage 브리지를 거쳐 ?guest=1 로 이동시키고, 여기서 감지해 아래 화면 선택
+# 로직이 for_him_prototype.html 대신 profile 3.html을 iframe에 로드하게 한다.
+if st.query_params.get("guest") == "1":
+    st.query_params.clear()
+    st.session_state["guest_mode"] = True
     st.rerun()
 
 # Streamlit의 기본 크롬(햄버거 메뉴/헤더/푸터)과 block-container 여백을 지워서
@@ -125,10 +136,13 @@ iframe { display: block; }
 </style>
 """, unsafe_allow_html=True)
 
-HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
+user = current_user()
+if not user and st.session_state["guest_mode"]:
+    HTML_PATH = pathlib.Path(__file__).parent / "profile 3.html"
+else:
+    HTML_PATH = pathlib.Path(__file__).parent / "for_him_prototype.html"
 html = HTML_PATH.read_text(encoding="utf-8")
 
-user = current_user()
 if user:
     name, email = user
     # 스플래시의 가입/로그인 버튼 자리에 로그아웃 링크를 넣고, 페이지가 뜨면 곧바로
@@ -177,6 +191,8 @@ st.html(
             params.set('profile', JSON.stringify(data.profile || {}));
           } else if (data.type === 'logout') {
             params.set('logout', '1');
+          } else if (data.type === 'guest_login') {
+            params.set('guest', '1');
           } else {
             return;
           }
