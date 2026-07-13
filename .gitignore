@@ -4,5 +4,5 @@ data/signups.json
 # Streamlit 로컬 secrets (Google OAuth 등) - 절대 커밋하지 않음
 .streamlit/secrets.toml
 
-# build_standalone.py 산출물 (약 80MB 단일 HTML) - 용량 때문에 커밋하지 않음
-MMM_standalone.html
+# build_standalone.py 산출물(MMM_standalone.html, 약 80MB)은 제출용이라 예외적으로 커밋한다.
+# 화면 파일을 수정하면 python build_standalone.py로 재생성해서 같이 커밋할 것.
