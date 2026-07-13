@@ -132,7 +132,7 @@
     overflow: hidden; transition: max-height .25s ease, padding .25s ease;
   }
   .search-panel[hidden], .nav-panel[hidden] { display: none; }
-  .search-panel { padding-bottom: 1rem; }
+  .search-panel { padding-bottom: 1rem; overflow: visible; } /* 자동완성 드롭다운이 패널 밖으로 펼쳐져야 함 */
   .search-panel input {
     width: 100%; padding: 0.7rem 1rem; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.25);
     background: rgba(255, 255, 255, 0.08); font-size: 0.95rem; color: var(--cream);
