@@ -93,6 +93,9 @@ if st.query_params.get("signup") == "1":
     if email:
         upsert_user(email, name=name)
     st.session_state["signed_up_user"] = {"name": name, "email": email}
+    # 가입 완료 → 곧바로 홈 화면의 프로필 설정 화면으로 이어지게 한다.
+    st.query_params["page"] = "home"
+    st.query_params["screen"] = "profile-screen"
     st.rerun()
 
 if st.query_params.get("profile_save") == "1":
@@ -129,44 +132,100 @@ iframe { display: block; }
 </style>
 """, unsafe_allow_html=True)
 
-# KITTY 담당 화면들(프로필 설정 / 스타일링 큐레이션 / GROOM AI)은 독립 HTML 파일이라
-# 기존 랜딩(for_him_prototype.html)에서는 접근할 수 없다. ?page= 쿼리 파라미터로
-# 어떤 파일을 iframe에 로드할지 고르고, 아래에서 상단 네비게이션 바로 전환하게 한다.
+# 팀원별 화면을 ?page= 쿼리 파라미터로 골라 iframe에 로드한다 (상단 네비게이션으로 전환).
+# FAWN이 프로토타입을 로그인 화면(for_him_prototype.html)과 홈 화면(home_prototype.html,
+# 히어로/갤러리/가입/프로필)으로 분리했고, KITTY 화면 3종과 목업 페이지도 여기 매핑된다.
 PAGES = {
-    "home": ("HOME", "for_him_prototype.html"),
+    "login": ("LOGIN", "for_him_prototype.html"),
+    "home": ("HOME", "home_prototype.html"),
     "mockup": ("MOCKUP", "mockup.html"),
     "profile": ("PROFILE", "profile.html"),
     "curation": ("STYLING", "curation.html"),
     "groom": ("GROOM AI", "groom_ai.html"),
 }
-page_key = st.query_params.get("page", "home")
+page_key = st.query_params.get("page", "login")
 if page_key not in PAGES:
-    page_key = "home"
+    page_key = "login"
 
-HTML_PATH = pathlib.Path(__file__).parent / PAGES[page_key][1]
-html = HTML_PATH.read_text(encoding="utf-8")
 
-# FAWN의 mockup.html은 <iframe src="for_him_prototype.html">로 프로토타입을 불러오는데,
-# components.html은 srcdoc 방식이라 상대 경로 파일을 서빙하지 못해 그대로는 빈 화면이
-# 된다. 프로토타입 HTML을 직접 읽어 srcdoc 속성으로 인라인해서 같은 화면을 보여준다.
+def load_html(name):
+    return (pathlib.Path(__file__).parent / name).read_text(encoding="utf-8")
+
+
+# 로그인 화면의 링크들은 home_prototype.html#... 상대 경로로 이동하는데, components.html
+# iframe(srcdoc)은 상대 경로 파일을 서빙하지 못해 클릭이 전부 깨진다. 그래서 서빙 시점에
+# 그 링크들을 postMessage(goto_home)로 바꿔치기하고, 최상단 브리지가 ?page=home&screen=...
+# 으로 변환해 Streamlit이 홈 화면을 해당 위치로 열게 한다. notifyParent는 홈 파일에만
+# 있어서 로그인 화면에는 mmmNotify/gotoHome 헬퍼를 직접 주입한다.
+GOTO_HOME_SCRIPT = """
+<script>
+  function mmmNotify(payload) {
+    try { window.top.postMessage(Object.assign({ __mmm: true }, payload), '*'); } catch (err) {}
+  }
+  function gotoHome(hash) { mmmNotify({ type: 'goto_home', hash: hash }); }
+</script>
+"""
+
+
+def build_login_html():
+    html = load_html("for_him_prototype.html")
+    html = html.replace("</head>", GOTO_HOME_SCRIPT + "</head>", 1)
+    html = re.sub(
+        r'href="home_prototype\.html#([A-Za-z0-9_-]+)"',
+        lambda m: 'href="#" onclick="event.preventDefault(); gotoHome(\'%s\')"' % m.group(1),
+        html,
+    )
+    html = html.replace(
+        "window.location.href='home_prototype.html#signup-screen'",
+        "gotoHome('signup-screen')",
+    )
+    return html
+
+
+if page_key == "login":
+    html = build_login_html()
+else:
+    html = load_html(PAGES[page_key][1])
+
+# 로그인 화면에서 넘어올 때 홈의 어떤 화면(가입/프로필) 또는 앵커(#hero 등)를 열지
+# ?screen=으로 전달받는다. 홈 파일 자체의 location.hash 부트스트랩은 srcdoc iframe에선
+# 해시가 없어 동작하지 않으므로 같은 일을 하는 스크립트를 주입한다.
+if page_key == "home":
+    screen = st.query_params.get("screen", "")
+    if re.fullmatch(r"[A-Za-z0-9_-]+", screen or ""):
+        bootstrap = """
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var screen = '%s';
+    if (screen === 'signup-screen') { showSignup(); }
+    else if (screen === 'profile-screen') { showProfileScreen(); }
+    else { var el = document.getElementById(screen); if (el) el.scrollIntoView(); }
+  });
+</script>
+""" % screen
+        html = html.replace("</body>", bootstrap + "</body>", 1)
+
+# FAWN의 mockup.html은 <iframe src="for_him_prototype.html">로 로그인 화면을 불러오는데,
+# srcdoc iframe 안에서는 상대 경로가 서빙되지 않아 빈 화면이 된다. 링크가 postMessage로
+# 재작성된 로그인 HTML을 srcdoc으로 인라인해서 목업 안에서도 실제 화면이 동작하게 한다.
 if page_key == "mockup":
-    proto = (pathlib.Path(__file__).parent / "for_him_prototype.html").read_text(encoding="utf-8")
     html = html.replace(
         '<iframe src="for_him_prototype.html" title="MMM prototype preview"></iframe>',
-        '<iframe srcdoc="%s" title="MMM prototype preview"></iframe>' % html_lib.escape(proto),
+        '<iframe srcdoc="%s" title="MMM prototype preview"></iframe>' % html_lib.escape(build_login_html()),
     )
 
 user = current_user()
-if user and page_key == "home":
+if user and page_key == "login":
     name, email = user
-    # 스플래시의 가입/로그인 버튼 자리에 로그아웃 링크를 넣고, 페이지가 뜨면 곧바로
-    # 프로필 설정 화면으로 넘어가게 한다 (가입 완료 → 곧바로 프로필 설정 화면).
+    # 스플래시의 가입/로그인 버튼 자리에 환영 문구 + 프로필/로그아웃 링크를 넣는다.
+    # (프로필 화면이 home_prototype.html로 분리되어 예전처럼 같은 문서 안에서
+    # showProfileScreen()을 바로 부를 수 없고, gotoHome으로 홈 화면을 연다.)
     auth_block = f"""
     <div class="splash-welcome">
       <p>{html_lib.escape(name)}님, 환영합니다 👋<br>{html_lib.escape(email)}</p>
-      <a href="#" onclick="event.preventDefault(); notifyParent({{type:'logout'}});">로그아웃</a>
+      <a href="#" onclick="event.preventDefault(); gotoHome('profile-screen');">프로필 설정</a> ·
+      <a href="#" onclick="event.preventDefault(); mmmNotify({{type:'logout'}});">로그아웃</a>
     </div>
-    <script>document.addEventListener('DOMContentLoaded', function(){{ showProfileScreen(); }});</script>
     """
     html = re.sub(
         r"<!--AUTH_BLOCK_START-->.*?<!--AUTH_BLOCK_END-->",
@@ -205,6 +264,9 @@ st.html(
             params.set('profile', JSON.stringify(data.profile || {}));
           } else if (data.type === 'logout') {
             params.set('logout', '1');
+          } else if (data.type === 'goto_home') {
+            params.set('page', 'home');
+            params.set('screen', data.hash || '');
           } else {
             return;
           }
