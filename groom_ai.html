@@ -158,6 +158,25 @@
     font-size: 11px;
     color: rgba(245,245,243,0.64);
   }
+  .btn-styling-link {
+    flex: 0 0 auto;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.18s ease, transform 0.18s ease;
+  }
+  .btn-styling-link:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
 
   /* ---------- Bubble UI ---------- */
   .group-label {
@@ -488,6 +507,7 @@
         <h2 class="title">사용법 안내</h2>
         <p class="step-sub">선택한 제품의 사용법을 확인해보세요</p>
       </div>
+      <a href="curation.html" class="btn-styling-link">Styling 하러 가기</a>
     </div>
 
     <div class="guide-topbar">
